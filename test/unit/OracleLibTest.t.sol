@@ -24,13 +24,8 @@ contract OracleLibTest is Test {
         vm.warp(block.timestamp + 1 hours);
 
         // Act
-        (
-            uint80 roundId,
-            int256 answer,
-            ,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = OracleLib.staleCheckLatestRoundData(priceFeed);
+        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) =
+            OracleLib.staleCheckLatestRoundData(priceFeed);
 
         // Assert
         assertEq(answer, INITIAL_PRICE);
