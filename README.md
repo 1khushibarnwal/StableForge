@@ -1,11 +1,158 @@
-1. Relative Stability: Anchoredor Pegged -> $1.00
-   1. Chainlink Price Feed
-   2. Set a functrion to exchange ETH and BTC -> $$$
-2. Stability Mechanism (Minting): Algorithmic (Decentralized)
-   1. People can only mint the stablecoin with enough collateral (coded)
-3. Collateral: Exogenous (Crypto)
-   1. wETH
-   2. wBTC
-4. What are our invariants/properties?
-5. Some proper oracle use.
-6. Smart Contract Audit Preparation.
+# DecentralizedStableCoin (DSC)
+
+A **decentralized, crypto-collateralized stablecoin protocol** built using **Solidity** and **Foundry**.
+
+This project is inspired by systems like MakerDAO (DAI) and demonstrates how a decentralized stablecoin can be designed using smart contracts, over-collateralization, and on-chain price feeds.
+
+---
+
+## 📌 What is DSC?
+
+**DecentralizedStableCoin (DSC)** is a stablecoin protocol that allows users to:
+
+- Deposit crypto collateral (e.g., wETH, wBTC)
+- Mint a USD-pegged stablecoin against that collateral
+- Burn stablecoins to unlock collateral
+- Maintain protocol solvency via over-collateralization and liquidation logic
+
+The system is designed to be:
+
+- **Decentralized**
+- **Transparent**
+- **Non-custodial**
+- **Permissionless**
+
+---
+
+## ✨ Features
+
+- 🪙 ERC20-based stablecoin (DSC)
+- 🔒 Crypto-collateralized (no fiat backing)
+- 📉 Over-collateralization to protect the peg
+- 🔥 Mint & burn functionality controlled by the engine
+- ⚖️ Health factor checks to prevent under-collateralized positions
+- 🧪 Extensive unit, fuzz, and invariant tests
+- 🛠 Built with Foundry for fast testing and debugging
+
+---
+
+## 🧱 Architecture Overview
+
+User \
+└── deposits collateral \
+└── DSC Engine \
+├── tracks collateral value \
+├── calculates health factor \
+├── mints / burns DSC \
+└── handles liquidation \
+└── DecentralizedStableCoin (ERC20)
+
+---
+
+## 📂 Project Structure
+
+├── src/ \
+│ ├── DecentralizedStableCoin.sol \
+│ ├── DSCEngine.sol \
+│ └── libraries/ \
+├── test/ \
+│ ├── unit/ \
+│ ├── fuzz/ \
+│ └── invariant/ \
+├── script/ \
+│ └── DeployDSC.s.sol \
+├── lib/ \
+├── foundry.toml \
+├── Makefile \
+└── README.md
+
+---
+
+## 🛠 Tech Stack
+
+- **Solidity**
+- **Foundry (Forge & Cast)**
+- **OpenZeppelin Contracts**
+- **Chainlink Price Feeds**
+
+---
+
+## ⚙️ Installation
+
+### Prerequisites
+
+- Foundry installed
+  ```bash
+  curl -L https://foundry.paradigm.xyz | bash
+  foundryup
+  ```
+
+---
+
+## 📥 Clone the Repository
+
+```bash
+git clone https://github.com/1khushibarnwal/DecentralizedStableCoin.git
+cd DecentralizedStableCoin
+```
+
+## 📦 Install Dependencies
+
+```bash
+forge install
+```
+
+## 🧪 Running Tests
+
+### All tests
+
+```bash
+forge test
+```
+
+### Run with verbose output
+
+```bash
+forge test -vvvv
+```
+
+### Run invariant tests only
+
+```bash
+forge test --mt invariant
+```
+
+## 🚀 Deployment
+
+Deploy locally or to a testnet using Foundry scripts:
+
+```bash
+forge script script/DeployDSC.s.sol \
+  --rpc-url <RPC_URL> \
+  --private-key <PRIVATE_KEY> \
+  --broadcast
+```
+
+Your .env file must have an RPC_URL and a PRIVATE_KEY in order to deploy it.
+
+## 🔐 Security Notes
+
+- This project is not audited
+
+- Intended for learning and experimentation
+
+- Do NOT use in production without a full security audit
+
+## 📚 Learning Goals of This Project
+
+- Stablecoin design patterns
+
+- Over-collateralization mechanics
+
+- Health factor calculations
+
+- Liquidation logic
+
+- Fuzz testing and invariant testing
+
+- Writing secure and testable smart contracts
