@@ -75,13 +75,8 @@ contract MockV3AggregatorTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testLatestRoundDataReturnsCorrectValues() public view {
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = mock.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            mock.latestRoundData();
 
         assertEq(roundId, 1);
         assertEq(answer, INITIAL_ANSWER);
@@ -98,13 +93,8 @@ contract MockV3AggregatorTest is Test {
         mock.updateAnswer(2_500e8);
         uint256 round = mock.latestRound();
 
-        (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = mock.getRoundData(uint80(round));
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            mock.getRoundData(uint80(round));
 
         assertEq(roundId, round);
         assertEq(answer, 2_500e8);

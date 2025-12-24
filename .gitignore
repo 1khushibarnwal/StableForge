@@ -12,3 +12,7 @@ docs/
 
 # Dotenv file
 .env
+
+Handler.t.sol
+Invariants.t.sol
+OpenInvariantsTest.t.sol

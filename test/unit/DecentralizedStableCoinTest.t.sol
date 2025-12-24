@@ -47,20 +47,12 @@ contract DecentralizedStableCoinTest is Test {
     }
 
     function testMintRevertsIfAmountIsZero() public {
-        vm.expectRevert(
-            DecentralizedStableCoin
-                .DecentralizedStableCoin__MustBeMoreThanZero
-                .selector
-        );
+        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__MustBeMoreThanZero.selector);
         dsc.mint(USER, 0);
     }
 
     function testMintRevertsIfToIsZeroAddress() public {
-        vm.expectRevert(
-            DecentralizedStableCoin
-                .DecentralizedStableCoin__NotZeroAddress
-                .selector
-        );
+        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__NotZeroAddress.selector);
         dsc.mint(address(0), AMOUNT);
     }
 
@@ -87,20 +79,12 @@ contract DecentralizedStableCoinTest is Test {
     function testBurnRevertsIfAmountIsZero() public {
         dsc.mint(OWNER, AMOUNT);
 
-        vm.expectRevert(
-            DecentralizedStableCoin
-                .DecentralizedStableCoin__MustBeMoreThanZero
-                .selector
-        );
+        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__MustBeMoreThanZero.selector);
         dsc.burn(0);
     }
 
     function testBurnRevertsIfAmountExceedsBalance() public {
-        vm.expectRevert(
-            DecentralizedStableCoin
-                .DecentralizedStableCoin__AmountExceedsBalance
-                .selector
-        );
+        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__AmountExceedsBalance.selector);
         dsc.burn(1 ether);
     }
 

@@ -21,12 +21,12 @@ contract ERC20MockTest is Test {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    function testConstructorSetsNameAndSymbol() public {
+    function testConstructorSetsNameAndSymbol() public view {
         assertEq(token.name(), "Mock Token");
         assertEq(token.symbol(), "MOCK");
     }
 
-    function testConstructorMintsInitialBalance() public {
+    function testConstructorMintsInitialBalance() public view {
         assertEq(token.balanceOf(USER), INITIAL_BALANCE);
         assertEq(token.totalSupply(), INITIAL_BALANCE);
     }

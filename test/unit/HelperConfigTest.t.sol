@@ -24,13 +24,7 @@ contract HelperConfigTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testConstructorSetsActiveNetworkConfigOnAnvil() public {
-        (
-            wethUsdPriceFeed,
-            wbtcUsdPriceFeed,
-            weth,
-            wbtc,
-            deployerKey
-        ) = helperConfig.activeNetworkConfig();
+        (wethUsdPriceFeed, wbtcUsdPriceFeed, weth, wbtc, deployerKey) = helperConfig.activeNetworkConfig();
 
         assertTrue(wethUsdPriceFeed != address(0));
         assertTrue(wbtcUsdPriceFeed != address(0));
@@ -44,27 +38,25 @@ contract HelperConfigTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testGetOrCreateAnvilEthConfigDeploysMocks() public {
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getOrCreateAnvilEthConfig();
+        HelperConfig.NetworkConfig memory config = helperConfig.getOrCreateAnvilEthConfig();
 
         // ETH/USD price feed
         MockV3Aggregator ethFeed = MockV3Aggregator(config.wethUsdPriceFeed);
 
         assertEq(ethFeed.decimals(), helperConfig.DECIMALS());
 
-        (, int256 ethPrice, , , ) = ethFeed.latestRoundData();
+        (, int256 ethPrice,,,) = ethFeed.latestRoundData();
         assertEq(ethPrice, helperConfig.ETH_USD_PRICE());
 
         // BTC/USD price feed
         MockV3Aggregator btcFeed = MockV3Aggregator(config.wbtcUsdPriceFeed);
 
-        (, int256 btcPrice, , , ) = btcFeed.latestRoundData();
+        (, int256 btcPrice,,,) = btcFeed.latestRoundData();
         assertEq(btcPrice, helperConfig.BTC_USD_PRICE());
     }
 
     function testGetOrCreateAnvilEthConfigDeploysERC20Mocks() public {
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getOrCreateAnvilEthConfig();
+        HelperConfig.NetworkConfig memory config = helperConfig.getOrCreateAnvilEthConfig();
 
         ERC20Mock wethMock = ERC20Mock(config.weth);
         ERC20Mock wbtcMock = ERC20Mock(config.wbtc);
@@ -81,11 +73,9 @@ contract HelperConfigTest is Test {
     }
 
     function testGetOrCreateAnvilEthConfigIsIdempotent() public {
-        HelperConfig.NetworkConfig memory first = helperConfig
-            .getOrCreateAnvilEthConfig();
+        HelperConfig.NetworkConfig memory first = helperConfig.getOrCreateAnvilEthConfig();
 
-        HelperConfig.NetworkConfig memory second = helperConfig
-            .getOrCreateAnvilEthConfig();
+        HelperConfig.NetworkConfig memory second = helperConfig.getOrCreateAnvilEthConfig();
 
         assertEq(first.wethUsdPriceFeed, second.wethUsdPriceFeed);
         assertEq(first.wbtcUsdPriceFeed, second.wbtcUsdPriceFeed);
@@ -103,18 +93,11 @@ contract HelperConfigTest is Test {
         vm.setEnv("PRIVATE_KEY", vm.toString(fakePrivateKey));
 
         // Act
-        HelperConfig.NetworkConfig memory config = helperConfig
-            .getSepoliaEthConfig();
+        HelperConfig.NetworkConfig memory config = helperConfig.getSepoliaEthConfig();
 
         // Assert — price feeds
-        assertEq(
-            config.wethUsdPriceFeed,
-            0x694AA1769357215DE4FAC081bf1f309aDC325306
-        );
-        assertEq(
-            config.wbtcUsdPriceFeed,
-            0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
-        );
+        assertEq(config.wethUsdPriceFeed, 0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        assertEq(config.wbtcUsdPriceFeed, 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43);
 
         // Assert — tokens
         assertEq(config.weth, 0xdd13E55209Fd76AfE204dBda4007C227904f0a81);
@@ -129,8 +112,7 @@ contract HelperConfigTest is Test {
         vm.setEnv("PRIVATE_KEY", "123");
 
         HelperConfig config = new HelperConfig();
-        (wethUsdPriceFeed, wbtcUsdPriceFeed, weth, wbtc, ) = config
-            .activeNetworkConfig();
+        (wethUsdPriceFeed, wbtcUsdPriceFeed, weth, wbtc,) = config.activeNetworkConfig();
 
         assertEq(wethUsdPriceFeed, 0x694AA1769357215DE4FAC081bf1f309aDC325306);
     }
