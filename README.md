@@ -122,6 +122,35 @@ forge test -vvvv
 forge test --mt invariant
 ```
 
+---
+
+## 🧰 Makefile
+
+This project includes a `Makefile` to simplify common development workflows by wrapping frequently used Foundry commands into short, memorable targets.
+
+Using the Makefile helps ensure:
+
+- Consistent command usage
+- Faster development workflows
+- Fewer mistakes when running complex commands
+
+### Common Makefile Commands
+
+Run all tests:
+
+```bash
+make test
+```
+
+Run invariant tests:
+
+```bash
+make invariant
+```
+
+And many more! \
+💡 Tip: Run make or make help to see all available commands defined in the Makefile.
+
 ## 🚀 Deployment
 
 Deploy locally or to a testnet using Foundry scripts:
@@ -156,3 +185,7 @@ Your .env file must have an RPC_URL and a PRIVATE_KEY in order to deploy it.
 - Fuzz testing and invariant testing
 
 - Writing secure and testable smart contracts
+
+## 📄 License
+
+This project is licensed under the MIT License.
