@@ -68,12 +68,16 @@ User \
 
 ---
 
-## 🛠 Tech Stack
+## 🧱 Tech Stack
 
-- **Solidity**
-- **Foundry (Forge & Cast)**
-- **OpenZeppelin Contracts**
-- **Chainlink Price Feeds**
+| Layer           | Technology                                               |
+| --------------- | -------------------------------------------------------- |
+| Smart Contracts | Solidity ^0.8.x                                          |
+| Framework       | Foundry (Forge, Anvil, Cast)                             |
+| Randomness      | Chainlink VRF (or mock implementation for local testing) |
+| Testing         | Forge test suite                                         |
+| Tooling         | Git, Makefile                                            |
+| Network Support | Localhost, Ethereum Testnets                             |
 
 ---
 
