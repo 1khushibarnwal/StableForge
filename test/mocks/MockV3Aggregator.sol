@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {Test} from "forge-std/Test.sol";
+
 /**
  * @title MockV3Aggregator
  * @notice Based on the FluxAggregator contract
@@ -9,7 +11,7 @@ pragma solidity ^0.8.0;
  * aggregator contract, but how the aggregator got
  * its answer is unimportant
  */
-contract MockV3Aggregator {
+contract MockV3Aggregator is Test {
     uint256 public constant VERSION = 0;
 
     uint8 public decimals;

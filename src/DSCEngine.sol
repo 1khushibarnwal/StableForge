@@ -63,6 +63,9 @@ contract DSCEngine is ReentrancyGuard {
     error DSCEngine__HealthFactorOk();
     error DSCEngine__HealthFactorNotImproved();
     error DSCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn();
+    error DSCEngine__OraclePriceStale();
+    error DSCEngine__OracleRoundIncomplete();
+    error DSCEngine__OraclePriceInvalid();
 
     /*////////////////////////////////////////////////
                             TYPES
@@ -78,6 +81,8 @@ contract DSCEngine is ReentrancyGuard {
     uint256 public constant LIQUIDATION_PRECISION = 100;
     uint256 public constant MIN_HEALTH_FACTOR = 1e18;
     uint256 public constant LIQUIDATION_BONUS = 10; // 10%
+
+    uint256 public constant MAX_PRICE_AGE = 3 hours;
 
     mapping(address token => address priceFeed) private sPriceFeeds; // types of collateral tokens accepted
     mapping(address user => mapping(address token => uint256 amount)) private sCollateralDeposited; // Says, “User X deposited Y amount of Token Z”
@@ -405,18 +410,19 @@ contract DSCEngine is ReentrancyGuard {
 
     function getUsdValue(address token, uint256 amount) public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(sPriceFeeds[token]);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
+
+        uint256 price = _getValidatedPrice(priceFeed);
         // 1 ETH = $1,000
         // The returned value from CL will be 1000_00000000 (8 decimal places)
         // We want to convert the price to have 18 decimal places to be consistent with ERC20 tokens
-        return ((uint256(price) * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
+        return ((price * ADDITIONAL_FEED_PRECISION) * amount) / PRECISION;
     }
 
     function getTokenAmountFromUsd(address token, uint256 usdAmountInWei) public view returns (uint256) {
         // price of ETH(token)
         AggregatorV3Interface priceFeed = AggregatorV3Interface(sPriceFeeds[token]);
-        (, int256 price,,,) = priceFeed.staleCheckLatestRoundData();
-        return (usdAmountInWei * PRECISION) / (uint256(price) * ADDITIONAL_FEED_PRECISION);
+        uint256 price = _getValidatedPrice(priceFeed);
+        return (usdAmountInWei * PRECISION) / ((price) * ADDITIONAL_FEED_PRECISION);
     }
 
     function getAccountInformation(address user)
@@ -426,6 +432,23 @@ contract DSCEngine is ReentrancyGuard {
     {
         (totalDscMinted, collateralValueInUsd) = _getAccountInformation(user);
         return (totalDscMinted, collateralValueInUsd);
+    }
+
+    /*////////////////////////////////////////////////
+                    ORACLE PRICE SECURITY
+    ////////////////////////////////////////////////*/
+    function _getValidatedPrice(AggregatorV3Interface priceFeed) internal view returns (uint256) {
+        (uint80 roundId, int256 price,, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
+
+        if (price <= 0) revert DSCEngine__OraclePriceInvalid();
+        if (answeredInRound < roundId) {
+            revert DSCEngine__OracleRoundIncomplete();
+        }
+        if (block.timestamp - updatedAt > MAX_PRICE_AGE) {
+            revert DSCEngine__OraclePriceStale();
+        }
+
+        return uint256(price);
     }
 
     /*////////////////////////////////////////////////

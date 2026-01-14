@@ -130,8 +130,8 @@ contract DSCEngineTest is Test {
         dsc = new DecentralizedStableCoin();
         DSCEngine engine = new DSCEngine(tokens, feeds, address(dsc));
 
-        address storedDSC = engine.getDsc();
-        assertEq(storedDSC, address(dsc));
+        address storedDsc = engine.getDsc();
+        assertEq(storedDsc, address(dsc));
     }
 
     function testIfSPriceFeedsDontCorrectlyMatch() public {

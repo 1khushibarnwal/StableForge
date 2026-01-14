@@ -91,6 +91,7 @@ contract MockV3AggregatorTest is Test {
 
     function testGetRoundDataReturnsHistoricalData() public {
         mock.updateAnswer(2_500e8);
+
         uint256 round = mock.latestRound();
 
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =

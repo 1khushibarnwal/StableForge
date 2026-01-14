@@ -7,8 +7,8 @@ import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
 contract DecentralizedStableCoinTest is Test {
     DecentralizedStableCoin internal dsc;
 
-    address internal OWNER = address(this); // test contract deploys it
-    address internal USER = makeAddr("user");
+    address internal owner = address(this); // test contract deploys it
+    address internal user = makeAddr("user");
 
     uint256 internal constant AMOUNT = 100 ether;
 
@@ -26,7 +26,7 @@ contract DecentralizedStableCoinTest is Test {
     }
 
     function testConstructorSetsOwnerCorrectly() public view {
-        assertEq(dsc.owner(), OWNER);
+        assertEq(dsc.owner(), owner);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -34,21 +34,21 @@ contract DecentralizedStableCoinTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testOwnerCanMint() public {
-        bool success = dsc.mint(USER, AMOUNT);
+        bool success = dsc.mint(user, AMOUNT);
 
         assertTrue(success);
-        assertEq(dsc.balanceOf(USER), AMOUNT);
+        assertEq(dsc.balanceOf(user), AMOUNT);
     }
 
     function testMintRevertsIfNotOwner() public {
-        vm.prank(USER);
+        vm.prank(user);
         vm.expectRevert(); // Ownable revert
-        dsc.mint(USER, AMOUNT);
+        dsc.mint(user, AMOUNT);
     }
 
     function testMintRevertsIfAmountIsZero() public {
         vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__MustBeMoreThanZero.selector);
-        dsc.mint(USER, 0);
+        dsc.mint(user, 0);
     }
 
     function testMintRevertsIfToIsZeroAddress() public {
@@ -61,23 +61,23 @@ contract DecentralizedStableCoinTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testOwnerCanBurn() public {
-        dsc.mint(OWNER, AMOUNT);
+        dsc.mint(owner, AMOUNT);
 
         dsc.burn(AMOUNT);
 
-        assertEq(dsc.balanceOf(OWNER), 0);
+        assertEq(dsc.balanceOf(owner), 0);
     }
 
     function testBurnRevertsIfNotOwner() public {
-        dsc.mint(OWNER, AMOUNT);
+        dsc.mint(owner, AMOUNT);
 
-        vm.prank(USER);
+        vm.prank(user);
         vm.expectRevert(); // Ownable revert
         dsc.burn(AMOUNT);
     }
 
     function testBurnRevertsIfAmountIsZero() public {
-        dsc.mint(OWNER, AMOUNT);
+        dsc.mint(owner, AMOUNT);
 
         vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__MustBeMoreThanZero.selector);
         dsc.burn(0);
@@ -89,10 +89,10 @@ contract DecentralizedStableCoinTest is Test {
     }
 
     function testBurnReducesBalanceCorrectly() public {
-        dsc.mint(OWNER, AMOUNT);
+        dsc.mint(owner, AMOUNT);
 
         dsc.burn(40 ether);
 
-        assertEq(dsc.balanceOf(OWNER), 60 ether);
+        assertEq(dsc.balanceOf(owner), 60 ether);
     }
 }

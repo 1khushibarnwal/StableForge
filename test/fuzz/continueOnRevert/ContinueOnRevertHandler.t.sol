@@ -4,13 +4,13 @@
 
 pragma solidity ^0.8.19;
 
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+//import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Test, console} from "forge-std/Test.sol";
 // import { ERC20Mock } from "@openzeppelin/contracts/mocks/ERC20Mock.sol"; Updated mock location
 import {ERC20Mock} from "../../mocks/ERC20Mock.sol";
 
 import {MockV3Aggregator} from "../../mocks/MockV3Aggregator.sol";
-import {DSCEngine, AggregatorV3Interface} from "../../../src/DSCEngine.sol";
+import {DSCEngine} from "../../../src/DSCEngine.sol";
 import {DecentralizedStableCoin} from "../../../src/DecentralizedStableCoin.sol";
 // import {Randomish, EnumerableSet} from "../Randomish.sol"; // Randomish is not found in the codebase, EnumerableSet
 // is imported from openzeppelin
@@ -81,7 +81,10 @@ contract ContinueOnRevertHandler is Test {
     function transferDsc(uint256 amountDsc, address to) public {
         amountDsc = bound(amountDsc, 0, dsc.balanceOf(msg.sender));
         vm.prank(msg.sender);
-        dsc.transfer(to, amountDsc);
+        bool success = dsc.transfer(to, amountDsc);
+        if (!success) {
+            return;
+        }
     }
 
     /////////////////////////////
