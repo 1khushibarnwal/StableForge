@@ -1,195 +1,284 @@
-# DecentralizedStableCoin (DSC)
+<h1 align="center">
+⚒️ StableForge
+</h1>
 
-A **decentralized, crypto-collateralized stablecoin protocol** built using **Solidity** and **Foundry**.
+<h3 align="center">
+A Decentralized Overcollateralized Stablecoin Protocol Built with Solidity & Foundry
+</h3>
 
-This project is inspired by systems like MakerDAO (DAI) and demonstrates how a decentralized stablecoin can be designed using smart contracts, over-collateralization, and on-chain price feeds.
+<p align="center">
+Mint a USD-pegged stablecoin backed by crypto collateral with transparent on-chain solvency.
+</p>
 
----
-
-## 📌 What is DSC?
-
-**DecentralizedStableCoin (DSC)** is a stablecoin protocol that allows users to:
-
-- Deposit crypto collateral (e.g., wETH, wBTC)
-- Mint a USD-pegged stablecoin against that collateral
-- Burn stablecoins to unlock collateral
-- Maintain protocol solvency via over-collateralization and liquidation logic
-
-The system is designed to be:
-
-- **Decentralized**
-- **Transparent**
-- **Non-custodial**
-- **Permissionless**
+<p align="center">
+  <img src="https://img.shields.io/badge/Solidity-0.8.24-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Foundry-Framework-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Chainlink-Oracle-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
+</p>
 
 ---
 
-## ✨ Features
+# 📖 About The Project
 
-- 🪙 ERC20-based stablecoin (DSC)
-- 🔒 Crypto-collateralized (no fiat backing)
-- 📉 Over-collateralization to protect the peg
-- 🔥 Mint & burn functionality controlled by the engine
-- ⚖️ Health factor checks to prevent under-collateralized positions
-- 🧪 Extensive unit, fuzz, and invariant tests
-- 🛠 Built with Foundry for fast testing and debugging
+StableForge is a decentralized stablecoin protocol that allows users to deposit collateral assets and mint a USD-pegged stablecoin.
+
+The system is designed around overcollateralization, oracle-based pricing, health factor monitoring, and liquidation mechanisms to maintain protocol solvency.
+
+Inspired by battle-tested DeFi systems like MakerDAO, StableForge focuses on security, transparency, and decentralized stablecoin issuance.
 
 ---
 
-## 🧱 Architecture Overview
+# ✨ Features
 
-User \
-└── deposits collateral \
-└── DSC Engine \
-├── tracks collateral value \
-├── calculates health factor \
-├── mints / burns DSC \
-└── handles liquidation \
-└── DecentralizedStableCoin (ERC20)
+✅ Overcollateralized Stablecoin System
 
----
+✅ Chainlink Price Feed Integration
 
-## 📂 Project Structure
+✅ Decentralized Minting & Burning
 
-├── src/ \
-│ ├── DecentralizedStableCoin.sol \
-│ ├── DSCEngine.sol \
-│ └── libraries/ \
-├── test/ \
-│ ├── unit/ \
-│ ├── fuzz/ \
-│ └── invariant/ \
-├── script/ \
-│ └── DeployDSC.s.sol \
-├── lib/ \
-├── foundry.toml \
-├── Makefile \
-└── README.md
+✅ Health Factor Protection
+
+✅ Liquidation Engine
+
+✅ Multi-Collateral Architecture
+
+✅ Foundry Testing Suite
+
+✅ Gas Optimized Solidity Contracts
 
 ---
 
-## 🧱 Tech Stack
+# 🏗️ Protocol Architecture
 
-| Layer           | Technology                                               |
-| --------------- | -------------------------------------------------------- |
-| Smart Contracts | Solidity ^0.8.x                                          |
-| Framework       | Foundry (Forge, Anvil, Cast)                             |
-| Randomness      | Chainlink VRF (or mock implementation for local testing) |
-| Testing         | Forge test suite                                         |
-| Tooling         | Git, Makefile                                            |
-| Network Support | Localhost, Ethereum Testnets                             |
+```text
+                ┌──────────────────┐
+                │      User        │
+                └────────┬─────────┘
+                         │
+                         ▼
+             Deposit Collateral
+                         │
+                         ▼
+        ┌──────────────────────────┐
+        │     StableForgeEngine    │
+        └──────────────────────────┘
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
 
----
+ Mint StableCoin             Redeem Collateral
 
-## ⚙️ Installation
+          ▼                             ▼
 
-### Prerequisites
+  StableForgeToken           Burn StableCoin
 
-- Foundry installed
-  ```bash
-  curl -L https://foundry.paradigm.xyz | bash
-  foundryup
-  ```
+          │
+          ▼
 
----
+ Health Factor Monitoring
 
-## 📥 Clone the Repository
+          │
+          ▼
 
-```bash
-git clone https://github.com/1khushibarnwal/DecentralizedStableCoin.git
-cd DecentralizedStableCoin
+ Liquidation If Undercollateralized
 ```
 
-## 📦 Install Dependencies
+---
+
+# ⚙️ Tech Stack
+
+| Technology     | Usage                 |
+| -------------- | --------------------- |
+| Solidity       | Smart Contracts       |
+| Foundry        | Development Framework |
+| Chainlink      | Price Oracles         |
+| OpenZeppelin   | Security Standards    |
+| GitHub Actions | CI/CD                 |
+
+---
+
+# 📂 Project Structure
+
+```bash
+StableForge
+│
+├── src
+│   ├── StableForgeEngine.sol
+│   ├── StableForgeToken.sol
+│
+├── script
+│   ├── DeployStableForge.s.sol
+│
+├── test
+│   ├── unit
+│   ├── fuzz
+│   ├── invariant
+│
+├── lib
+│
+└── README.md
+```
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Make sure you have installed:
+
+- Git
+- Foundry
+
+Install Foundry:
+
+```bash
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+```
+
+---
+
+## Clone Repository
+
+```bash
+git clone https://github.com/1khushibarnwal/StableForge.git
+```
+
+```bash
+cd StableForge
+```
+
+---
+
+## Install Dependencies
 
 ```bash
 forge install
 ```
 
-## 🧪 Running Tests
+---
 
-### All tests
+## Build
+
+```bash
+forge build
+```
+
+---
+
+## Test
 
 ```bash
 forge test
 ```
 
-### Run with verbose output
+---
+
+## Coverage
 
 ```bash
-forge test -vvvv
-```
-
-### Run invariant tests only
-
-```bash
-forge test --mt invariant
+forge coverage
 ```
 
 ---
 
-## 🧰 Makefile
+# 🔒 Security Model
 
-This project includes a `Makefile` to simplify common development workflows by wrapping frequently used Foundry commands into short, memorable targets.
+StableForge maintains solvency through:
 
-Using the Makefile helps ensure:
+- Overcollateralization
+- Oracle-backed asset pricing
+- Health factor calculations
+- Liquidation incentives
+- Restricted minting logic
 
-- Consistent command usage
-- Faster development workflows
-- Fewer mistakes when running complex commands
+Every minted stablecoin must remain backed by sufficient collateral value.
 
-### Common Makefile Commands
+---
+
+# 📊 Health Factor
+
+```text
+HF > 1  → Healthy Position
+
+HF = 1  → Liquidation Threshold
+
+HF < 1  → Eligible For Liquidation
+```
+
+---
+
+# 🧪 Testing
+
+The protocol includes:
+
+- Unit Tests
+- Fuzz Tests
+- Invariant Tests
 
 Run all tests:
 
 ```bash
-make test
+forge test -vvv
 ```
 
 Run invariant tests:
 
 ```bash
-make invariant
+forge test --match-path test/invariant/*
 ```
 
-And many more! \
-💡 Tip: Run make or make help to see all available commands defined in the Makefile.
+---
 
-## 🚀 Deployment
+# 🛣️ Roadmap
 
-Deploy locally or to a testnet using Foundry scripts:
+- [x] Stablecoin Minting
+- [x] Collateral Deposits
+- [x] Redemption Logic
+- [x] Liquidation Mechanism
+- [x] Health Factor Enforcement
+- [ ] Governance Module
+- [ ] Cross-Chain Support
+- [ ] Yield Bearing Collateral
+- [ ] DAO Treasury
+- [ ] Dynamic Stability Fees
+
+---
+
+# 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome.
 
 ```bash
-forge script script/DeployDSC.s.sol \
-  --rpc-url <RPC_URL> \
-  --private-key <PRIVATE_KEY> \
-  --broadcast
+Fork → Branch → Commit → Pull Request
 ```
 
-Your .env file must have an RPC_URL and a PRIVATE_KEY in order to deploy it.
+---
 
-## 🔐 Security Notes
+# 📜 License
 
-- This project is not audited
+Distributed under the MIT License.
 
-- Intended for learning and experimentation
+---
 
-- Do NOT use in production without a full security audit
+# 👨‍💻 Authors
 
-## 📚 Learning Goals of This Project
+### Khushi Barnwal
 
-- Stablecoin design patterns
+- GitHub: https://github.com/1khushibarnwal
 
-- Over-collateralization mechanics
+---
 
-- Health factor calculations
+# ⚠️ Disclaimer
 
-- Liquidation logic
+This project is built for educational and research purposes.
 
-- Fuzz testing and invariant testing
+Do not use in production environments without professional audits and extensive security reviews.
 
-- Writing secure and testable smart contracts
+---
 
-## 📄 License
-
-This project is licensed under the MIT License.
+<p align="center">
+Built with ❤️ using Solidity, Foundry and Chainlink
+</p>
