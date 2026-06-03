@@ -9,16 +9,16 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
-import {DSCEngine} from "../../../src/DSCEngine.sol";
-import {DecentralizedStableCoin} from "../../../src/DecentralizedStableCoin.sol";
+import {SFCEngine} from "../../../src/SFCEngine.sol";
+import {StableForgeCoin} from "../../../src/StableForgeCoin.sol";
 import {HelperConfig} from "../../../script/HelperConfig.s.sol";
-import {DeployDSC} from "../../../script/DeployDSC.s.sol";
+import {DeploySFC} from "../../../script/DeploySFC.s.sol";
 import {ERC20Mock} from "../../mocks/ERC20Mock.sol";
 import {ContinueOnRevertHandler} from "./ContinueOnRevertHandler.t.sol";
 
 contract ContinueOnRevertInvariants is StdInvariant, Test {
-    DSCEngine public dsce;
-    DecentralizedStableCoin public dsc;
+    SFCEngine public sfcEngine;
+    StableForgeCoin public sfc;
     HelperConfig public helperConfig;
 
     address public ethUsdPriceFeed;
@@ -41,24 +41,28 @@ contract ContinueOnRevertInvariants is StdInvariant, Test {
     ContinueOnRevertHandler public handler;
 
     function setUp() external {
-        DeployDSC deployer = new DeployDSC();
-        (dsc, dsce, helperConfig) = deployer.run();
-        (ethUsdPriceFeed, btcUsdPriceFeed, weth, wbtc,) = helperConfig.activeNetworkConfig();
-        handler = new ContinueOnRevertHandler(dsce, dsc);
+        DeploySFC deployer = new DeploySFC();
+        (sfc, sfcEngine, helperConfig) = deployer.run();
+        (ethUsdPriceFeed, btcUsdPriceFeed, weth, wbtc, ) = helperConfig
+            .activeNetworkConfig();
+        handler = new ContinueOnRevertHandler(sfcEngine, sfc);
         targetContract(address(handler));
         // targetContract(address(ethUsdPriceFeed));// Why can't we just do this?
     }
 
     // forge-config: default.invariant.fail-on-revert = false
-    function invariant_protocolMustHaveMoreValueThanTotalSupplyDollars() public {
-        uint256 totalSupply = dsc.totalSupply();
-        uint256 wethDeposited = ERC20Mock(weth).balanceOf(address(dsce));
-        uint256 wbtcDeposited = ERC20Mock(wbtc).balanceOf(address(dsce));
+    function invariant_protocolMustHaveMoreValueThanTotalSupplyDollars()
+        public
+        view
+    {
+        uint256 totalSupply = sfc.totalSupply();
+        uint256 wethDeposited = ERC20Mock(weth).balanceOf(address(sfcEngine));
+        uint256 wbtcDeposited = ERC20Mock(wbtc).balanceOf(address(sfcEngine));
 
         uint256 wethValue;
         uint256 wbtcValue;
 
-        try dsce.getUsdValue(weth, wethDeposited) returns (uint256 value) {
+        try sfcEngine.getUsdValue(weth, wethDeposited) returns (uint256 value) {
             wethValue = value;
         } catch {
             // Oracle failure = protocol invariant violated
@@ -66,7 +70,7 @@ contract ContinueOnRevertInvariants is StdInvariant, Test {
             return;
         }
 
-        try dsce.getUsdValue(wbtc, wbtcDeposited) returns (uint256 value) {
+        try sfcEngine.getUsdValue(wbtc, wbtcDeposited) returns (uint256 value) {
             wbtcValue = value;
         } catch {
             return;

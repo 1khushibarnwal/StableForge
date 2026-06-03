@@ -7,9 +7,9 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
  * @title OracleLib
  * @author Khushi Barnwal
  * @notice This library is used to check the Chainlink Oracle for stale data.
- * If a price is stale, the function will revert, and render the DSCEngine unusable - This is by design.
+ * If a price is stale, the function will revert, and render the SFCEngine unusable - This is by design.
  *
- * We want the DSCEngine to freeze if prices become stale.
+ * We want the SFCEngine to freeze if prices become stale.
  *
  * So if the Chainlink network explodes and you have a lot of money locked in the protocol... TOO BAD!!
  */
@@ -18,13 +18,16 @@ library OracleLib {
 
     uint256 private constant TIMEOUT = 3 hours;
 
-    function staleCheckLatestRoundData(AggregatorV3Interface chainlinkFeed)
-        public
-        view
-        returns (uint80, int256, uint256, uint256, uint80)
-    {
-        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
-            chainlinkFeed.latestRoundData();
+    function staleCheckLatestRoundData(
+        AggregatorV3Interface chainlinkFeed
+    ) public view returns (uint80, int256, uint256, uint256, uint80) {
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        ) = chainlinkFeed.latestRoundData();
 
         if (updatedAt == 0 || answeredInRound < roundId) {
             revert OracleLib__StalePrice();
@@ -37,11 +40,7 @@ library OracleLib {
 
     function getTimeout(
         AggregatorV3Interface /* chainlinkFeed */
-    )
-        public
-        pure
-        returns (uint256)
-    {
+    ) public pure returns (uint256) {
         return TIMEOUT;
     }
 }

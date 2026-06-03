@@ -10,8 +10,8 @@ import {Test, console} from "forge-std/Test.sol";
 import {ERC20Mock} from "../../mocks/ERC20Mock.sol";
 
 import {MockV3Aggregator} from "../../mocks/MockV3Aggregator.sol";
-import {DSCEngine} from "../../../src/DSCEngine.sol";
-import {DecentralizedStableCoin} from "../../../src/DecentralizedStableCoin.sol";
+import {SFCEngine} from "../../../src/SFCEngine.sol";
+import {StableForgeCoin} from "../../../src/StableForgeCoin.sol";
 // import {Randomish, EnumerableSet} from "../Randomish.sol"; // Randomish is not found in the codebase, EnumerableSet
 // is imported from openzeppelin
 
@@ -20,8 +20,8 @@ contract ContinueOnRevertHandler is Test {
     // using Randomish for EnumerableSet.AddressSet;
 
     // Deployed contracts to interact with
-    DSCEngine public dscEngine;
-    DecentralizedStableCoin public dsc;
+    SFCEngine public sfcEngine;
+    StableForgeCoin public sfc;
     MockV3Aggregator public ethUsdPriceFeed;
     MockV3Aggregator public btcUsdPriceFeed;
     ERC20Mock public weth;
@@ -30,58 +30,76 @@ contract ContinueOnRevertHandler is Test {
     // Ghost Variables
     uint96 public constant MAX_DEPOSIT_SIZE = type(uint96).max;
 
-    constructor(DSCEngine _dscEngine, DecentralizedStableCoin _dsc) {
-        dscEngine = _dscEngine;
-        dsc = _dsc;
+    constructor(SFCEngine _sfcEngine, StableForgeCoin _sfc) {
+        sfcEngine = _sfcEngine;
+        sfc = _sfc;
 
-        address[] memory collateralTokens = dscEngine.getCollateralTokens();
+        address[] memory collateralTokens = sfcEngine.getCollateralTokens();
         weth = ERC20Mock(collateralTokens[0]);
         wbtc = ERC20Mock(collateralTokens[1]);
 
-        ethUsdPriceFeed = MockV3Aggregator(dscEngine.getCollateralTokenPriceFeed(address(weth)));
-        btcUsdPriceFeed = MockV3Aggregator(dscEngine.getCollateralTokenPriceFeed(address(wbtc)));
+        ethUsdPriceFeed = MockV3Aggregator(
+            sfcEngine.getCollateralTokenPriceFeed(address(weth))
+        );
+        btcUsdPriceFeed = MockV3Aggregator(
+            sfcEngine.getCollateralTokenPriceFeed(address(wbtc))
+        );
     }
 
     // FUNCTIONS TO INTERACT WITH
 
     ///////////////
-    // DSCEngine //
+    // SFCEngine //
     ///////////////
-    function mintAndDepositCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
+    function mintAndDepositCollateral(
+        uint256 collateralSeed,
+        uint256 amountCollateral
+    ) public {
         amountCollateral = bound(amountCollateral, 0, MAX_DEPOSIT_SIZE);
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
         collateral.mint(msg.sender, amountCollateral);
-        dscEngine.depositCollateral(address(collateral), amountCollateral);
+        sfcEngine.depositCollateral(address(collateral), amountCollateral);
     }
 
-    function redeemCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
+    function redeemCollateral(
+        uint256 collateralSeed,
+        uint256 amountCollateral
+    ) public {
         amountCollateral = bound(amountCollateral, 0, MAX_DEPOSIT_SIZE);
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        dscEngine.redeemCollateral(address(collateral), amountCollateral);
+        sfcEngine.redeemCollateral(address(collateral), amountCollateral);
     }
 
-    function burnDsc(uint256 amountDsc) public {
-        amountDsc = bound(amountDsc, 0, dsc.balanceOf(msg.sender));
-        dsc.burn(amountDsc);
+    function burnSfc(uint256 amountSfc) public {
+        amountSfc = bound(amountSfc, 0, sfc.balanceOf(msg.sender));
+        sfc.burn(amountSfc);
     }
 
-    function mintDsc(uint256 amountDsc) public {
-        amountDsc = bound(amountDsc, 0, MAX_DEPOSIT_SIZE);
-        dsc.mint(msg.sender, amountDsc);
+    function mintSfc(uint256 amountSfc) public {
+        amountSfc = bound(amountSfc, 0, MAX_DEPOSIT_SIZE);
+        sfc.mint(msg.sender, amountSfc);
     }
 
-    function liquidate(uint256 collateralSeed, address userToBeLiquidated, uint256 debtToCover) public {
+    function liquidate(
+        uint256 collateralSeed,
+        address userToBeLiquidated,
+        uint256 debtToCover
+    ) public {
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        dscEngine.liquidate(address(collateral), userToBeLiquidated, debtToCover);
+        sfcEngine.liquidate(
+            address(collateral),
+            userToBeLiquidated,
+            debtToCover
+        );
     }
 
     /////////////////////////////
     // DecentralizedStableCoin //
     /////////////////////////////
-    function transferDsc(uint256 amountDsc, address to) public {
-        amountDsc = bound(amountDsc, 0, dsc.balanceOf(msg.sender));
+    function transferSfc(uint256 amountSfc, address to) public {
+        amountSfc = bound(amountSfc, 0, sfc.balanceOf(msg.sender));
         vm.prank(msg.sender);
-        bool success = dsc.transfer(to, amountDsc);
+        bool success = sfc.transfer(to, amountSfc);
         if (!success) {
             return;
         }
@@ -94,19 +112,21 @@ contract ContinueOnRevertHandler is Test {
         uint128,
         /* newPrice */
         uint256 collateralSeed
-    )
-        public
-    {
+    ) public {
         // int256 intNewPrice = int256(uint256(newPrice));
         int256 intNewPrice = 0;
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        MockV3Aggregator priceFeed = MockV3Aggregator(dscEngine.getCollateralTokenPriceFeed(address(collateral)));
+        MockV3Aggregator priceFeed = MockV3Aggregator(
+            sfcEngine.getCollateralTokenPriceFeed(address(collateral))
+        );
 
         priceFeed.updateAnswer(intNewPrice);
     }
 
     /// Helper Functions
-    function _getCollateralFromSeed(uint256 collateralSeed) private view returns (ERC20Mock) {
+    function _getCollateralFromSeed(
+        uint256 collateralSeed
+    ) private view returns (ERC20Mock) {
         if (collateralSeed % 2 == 0) {
             return weth;
         } else {
@@ -115,8 +135,8 @@ contract ContinueOnRevertHandler is Test {
     }
 
     function callSummary() external view {
-        console.log("Weth total deposited", weth.balanceOf(address(dscEngine)));
-        console.log("Wbtc total deposited", wbtc.balanceOf(address(dscEngine)));
-        console.log("Total supply of DSC", dsc.totalSupply());
+        console.log("Weth total deposited", weth.balanceOf(address(sfcEngine)));
+        console.log("Wbtc total deposited", wbtc.balanceOf(address(sfcEngine)));
+        console.log("Total supply of SFC", sfc.totalSupply());
     }
 }

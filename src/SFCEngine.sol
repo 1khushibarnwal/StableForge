@@ -1,41 +1,18 @@
 // SPDX-License-Identifier: MIT
 
-// This is considered an Exogenous, Decentralized, Anchored (pegged), Crypto Collateralized low volatility coin
-
-// Layout of Contract:
-// version
-// imports
-// interfaces, libraries, contracts
-// errors
-// Type declarations
-// State variables
-// Events
-// Modifiers
-// Functions
-
-// Layout of Functions:
-// constructor
-// receive function (if exists)
-// fallback function (if exists)
-// external
-// public
-// internal
-// private
-// view & pure functions
-
 pragma solidity ^0.8.18;
 
-import {DecentralizedStableCoin} from "./DecentralizedStableCoin.sol";
+import {StableForgeCoin} from "./StableForgeCoin.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {OracleLib} from "./libraries/OracleLib.sol";
 
 /**
- * @title DSCEngine
+ * @title SFCEngine
  * @author Khushi Barnwal
  * @notice This contrat is the core of the Decentralized Stable Coin system.
- * It handles all the logic for minting and redeeming DSC, as well as depositing and withdrawing collateral.
+ * It handles all the logic for minting and redeeming SFC, as well as depositing and withdrawing collateral.
  * @notice This contract is VERY loosely based on the MakerDAO DSS (DAI Stablecoin System) system.
  *
  * This system is designed to be as minimal as possible, and have the tokens maintain a (1 token == $1) peg.
@@ -44,28 +21,28 @@ import {OracleLib} from "./libraries/OracleLib.sol";
  * Dollar Pegged
  * Algorithmically Stable
  *
- * Our DSC system should always be OVERCOLLATERALIZED to ensure the peg. At no point should the value of all collateral <= the $ backed value of all DSC.
+ * Our SFC system should always be OVERCOLLATERALIZED to ensure the peg. At no point should the value of all collateral <= the $ backed value of all SFC.
  *
  * It is similar to DAI if it had no governance, no fees, and was only backed by wETH & wBTC.
  */
-contract DSCEngine is ReentrancyGuard {
+contract SFCEngine is ReentrancyGuard {
     /*////////////////////////////////////////////////
                         ERRORS
     ////////////////////////////////////////////////*/
-    error DSCEngine__NeedsMoreThanZero();
-    error DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
-    error DSCEngine__NotAllowedToken();
-    error DSCEngine__TransferFailedInDepositCollateral();
-    error DSCEngine__BreaksHealthFactor();
-    error DSCEngine__MintFailed();
-    error DSCEngine__TransferFailedInRedeemCollateral();
-    error DSCEngine__TransferFailedInBurnDsc();
-    error DSCEngine__HealthFactorOk();
-    error DSCEngine__HealthFactorNotImproved();
-    error DSCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn();
-    error DSCEngine__OraclePriceStale();
-    error DSCEngine__OracleRoundIncomplete();
-    error DSCEngine__OraclePriceInvalid();
+    error SFCEngine__NeedsMoreThanZero();
+    error SFCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
+    error SFCEngine__NotAllowedToken();
+    error SFCEngine__TransferFailedInDepositCollateral();
+    error SFCEngine__BreaksHealthFactor();
+    error SFCEngine__MintFailed();
+    error SFCEngine__TransferFailedInRedeemCollateral();
+    error SFCEngine__TransferFailedInBurnSfc();
+    error SFCEngine__HealthFactorOk();
+    error SFCEngine__HealthFactorNotImproved();
+    error SFCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn();
+    error SFCEngine__OraclePriceStale();
+    error SFCEngine__OracleRoundIncomplete();
+    error SFCEngine__OraclePriceInvalid();
 
     /*////////////////////////////////////////////////
                             TYPES
@@ -86,11 +63,11 @@ contract DSCEngine is ReentrancyGuard {
 
     mapping(address token => address priceFeed) private sPriceFeeds; // types of collateral tokens accepted
     mapping(address user => mapping(address token => uint256 amount)) private sCollateralDeposited; // Says, “User X deposited Y amount of Token Z”
-    mapping(address user => uint256 amountDscMinted) private sDscMinted; // user mapped to amount of DSC they have minted
+    mapping(address user => uint256 amountSfcMinted) private sSfcMinted; // user mapped to amount of SFC they have minted
 
     address[] private sCollateralTokens;
 
-    DecentralizedStableCoin private immutable I_DSC;
+    StableForgeCoin private immutable I_SFC;
 
     /*////////////////////////////////////////////////
                         EVENTS
@@ -111,7 +88,7 @@ contract DSCEngine is ReentrancyGuard {
 
     function _moreThanZero(uint256 amount) internal pure {
         if (amount == 0) {
-            revert DSCEngine__NeedsMoreThanZero();
+            revert SFCEngine__NeedsMoreThanZero();
         }
     }
 
@@ -122,17 +99,17 @@ contract DSCEngine is ReentrancyGuard {
 
     function _isAllowedToken(address token) internal view {
         if (sPriceFeeds[token] == address(0)) {
-            revert DSCEngine__NotAllowedToken();
+            revert SFCEngine__NotAllowedToken();
         }
     }
 
     /*////////////////////////////////////////////////
                         FUNCTIONS
     ////////////////////////////////////////////////*/
-    constructor(address[] memory tokenAddresses, address[] memory priceFeedAddresses, address dscAddress) {
+    constructor(address[] memory tokenAddresses, address[] memory priceFeedAddresses, address sfcAddress) {
         // USD Price Feeds
         if (tokenAddresses.length != priceFeedAddresses.length) {
-            revert DSCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
+            revert SFCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength();
         }
         // For example: ETH/USD, BTC/USD, MKR/USD, etc
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
@@ -140,7 +117,7 @@ contract DSCEngine is ReentrancyGuard {
             sCollateralTokens.push(tokenAddresses[i]);
         }
 
-        I_DSC = DecentralizedStableCoin(dscAddress);
+        I_SFC = StableForgeCoin(sfcAddress);
     }
 
     /*////////////////////////////////////////////////
@@ -148,21 +125,21 @@ contract DSCEngine is ReentrancyGuard {
     ////////////////////////////////////////////////*/
 
     /**
-     * @notice Deposit collateral and mint DSC, an external state-modifying contract function.
+     * @notice Deposit collateral and mint SFC, an external state-modifying contract function.
      * @notice Both will be done in a single transaction.
      * @param tokenCollateralAddress The address of the token to deposit collateral.
      * @param amountCollateral The amount collateral to deposit.
-     * @param amountDscToMint The amount DSC to mint.
-     * @custom:signature depositCollateralAndMintDsc(address,uint256,uint256)
+     * @param amountSfcToMint The amount SFC to mint.
+     * @custom:signature depositCollateralAndMintSfc(address,uint256,uint256)
      * @custom:selector 0xe90db8a3
      */
-    function depositCollateralAndMintDsc(
+    function depositCollateralAndMintSfc(
         address tokenCollateralAddress,
         uint256 amountCollateral,
-        uint256 amountDscToMint
+        uint256 amountSfcToMint
     ) external {
         depositCollateral(tokenCollateralAddress, amountCollateral);
-        mintDsc(amountDscToMint);
+        mintSfc(amountSfcToMint);
     }
 
     /**
@@ -183,26 +160,26 @@ contract DSCEngine is ReentrancyGuard {
         // why IERC20 and not ERC20? because we don't need the full implementation, just the interface to interact with it.
 
         if (!success) {
-            revert DSCEngine__TransferFailedInDepositCollateral();
+            revert SFCEngine__TransferFailedInDepositCollateral();
         }
     }
 
     /**
-     * @notice Redeem collateral for dsc, an external state-modifying contract function.
+     * @notice Redeem collateral for sfc, an external state-modifying contract function.
      * @param tokenCollateralAddress The token collateral address to redeem.
      * @param amountCollateral The amount collateral to redeem.
-     * @param amountDscToBurn The amount dsc to burn.
-     * This function burns DSC and redeems collateral in a single transaction.
+     * @param amountSfcToBurn The amount sfc to burn.
+     * This function burns SFC and redeems collateral in a single transaction.
      */
-    function redeemCollateralForDsc(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountDscToBurn)
+    function redeemCollateralForSfc(address tokenCollateralAddress, uint256 amountCollateral, uint256 amountSfcToBurn)
         external
     {
-        burnDsc(amountDscToBurn);
+        burnSfc(amountSfcToBurn);
         redeemCollateral(tokenCollateralAddress, amountCollateral);
         // redeemCollateral already checks for health factor
     }
 
-    // In order to redeem collateral, you have to burn DSC.
+    // In order to redeem collateral, you have to burn SFC.
     // 1. Health factor must be >1 AFTER collateral pulled.
     // DRY: Don't Repeat Yourself
     // CEI: Check, Effects, Interactions
@@ -215,40 +192,40 @@ contract DSCEngine is ReentrancyGuard {
 
         _revertIfHealthFactorIsBroken(msg.sender);
 
-        // $100 ETH = $20 DSC
+        // $100 ETH = $20 SFC
         // $100 (breaks health factor)
-        // 1. burn DSC
+        // 1. burn SFC
         // 2. pull collateral / redeem ETH
     }
 
     // Do we need to check health factor here? No, because they are reducing their debt.
-    function burnDsc(uint256 amount) public moreThanZero(amount) {
-        _burnDsc(amount, msg.sender, msg.sender);
-        _revertIfHealthFactorIsBroken(msg.sender); // if they burned too much DSC, their health factor could go below minimum
+    function burnSfc(uint256 amount) public moreThanZero(amount) {
+        _burnSfc(amount, msg.sender, msg.sender);
+        _revertIfHealthFactorIsBroken(msg.sender); // if they burned too much SFC, their health factor could go below minimum
         // i don't think this would ever hit...
     }
 
-    // Check if the collateral value > DSC amount minted =>> Price Feeds, get USD value of collateral etc.
+    // Check if the collateral value > SFC amount minted =>> Price Feeds, get USD value of collateral etc.
     /**
      * @notice Follows CEI.
-     * @param amountDscToMint -> The amount of stablecoins to mint.
+     * @param amountSfcToMint -> The amount of stablecoins to mint.
      * @notice they must have more collateral value than the minimum threshold.
      */
-    function mintDsc(uint256 amountDscToMint) public moreThanZero(amountDscToMint) nonReentrant {
-        sDscMinted[msg.sender] += amountDscToMint;
+    function mintSfc(uint256 amountSfcToMint) public moreThanZero(amountSfcToMint) nonReentrant {
+        sSfcMinted[msg.sender] += amountSfcToMint;
         _revertIfHealthFactorIsBroken(msg.sender);
-        bool minted = I_DSC.mint(msg.sender, amountDscToMint);
+        bool minted = I_SFC.mint(msg.sender, amountSfcToMint);
         if (!minted) {
-            revert DSCEngine__MintFailed();
+            revert SFCEngine__MintFailed();
         }
     }
 
     // If we do start nearing undercollateralization, we need someone to liquidate positions.
     // ------------------------------------------------
-    // $100 ETH backing $50 DSC
-    // $20 ETH back $50 DSC (undercollateralized) => DSC isn't worth $1!!!
-    // $75 ETH backing $50 DSC => This is done to lure liquidators(since they get a discount)
-    // Liquidator take $75 backing and burns off $50 DSC
+    // $100 ETH backing $50 SFC
+    // $20 ETH back $50 SFC (undercollateralized) => SFC isn't worth $1!!!
+    // $75 ETH backing $50 SFC => This is done to lure liquidators(since they get a discount)
+    // Liquidator take $75 backing and burns off $50 SFC
     // ------------------------------------------------
     // If someone is almost undercollateralized, we will pay you to liquidate them!
 
@@ -256,17 +233,17 @@ contract DSCEngine is ReentrancyGuard {
      * @notice Liquidate, an external state-modifying contract function.
      * @param collateral The collateral address to liquidate from the user.
      * @param user The user address who has broken health factor. Their _healthFactor < MIN_HEALTH_FACTOR.
-     * @param debtToCover The amount of DSC you want to burn to improve the user's health factor.
+     * @param debtToCover The amount of SFC you want to burn to improve the user's health factor.
      * @notice You can partially liquidate a user.
      * @notice This function will transfer the collateral to the liquidator at a discount.
-     * @notice The working of this function assumes the protocol will be roughly 200% overcollateralized at all times, so there should always be enough collateral to cover the DSC.
+     * @notice The working of this function assumes the protocol will be roughly 200% overcollateralized at all times, so there should always be enough collateral to cover the SFC.
      * @notice A known bug would be if the protocol were 100% or less collateralized, then we wouldn't be able to incentivize liquidators properly.
      * For ex, if the price of the collateral plummeted before anyone colud be liquidated.
      */
     /**
      * Follow CEI.
      * 1. Check that the user is indeed below the minimum health factor.
-     * 2. Burn the DSC from the liquidator.
+     * 2. Burn the SFC from the liquidator.
      * 3. Calculate the amount of collateral to give to the liquidator.
      * 4. Transfer the collateral to the liquidator.
      */
@@ -279,19 +256,19 @@ contract DSCEngine is ReentrancyGuard {
         // Check health factor of user(must be below minimum)
         uint256 startingUserHealthFactor = _healthFactor(user);
         if (startingUserHealthFactor >= MIN_HEALTH_FACTOR) {
-            revert DSCEngine__HealthFactorOk();
+            revert SFCEngine__HealthFactorOk();
         }
 
         // 2.
-        // We want to burn their DSC "debt"
+        // We want to burn their SFC "debt"
         // and take their collateral
-        // Bad user ex: $140 ETH, $100 DSC
+        // Bad user ex: $140 ETH, $100 SFC
         // debtToCover = $100
-        // $100 of DSC == ??? ETH?
+        // $100 of SFC == ??? ETH?
         uint256 tokenAmountFromDebtCovered = getTokenAmountFromUsd(collateral, debtToCover);
         // 3.
         // Give liquidator 10% bonus
-        // So we are giving the liquidator $110 worth of ETH for $100 DSC
+        // So we are giving the liquidator $110 worth of ETH for $100 SFC
         // We should implement a feature to liquidate in the event the protocol is insolvent.
         // And sweep extra amounts into a treasury.
 
@@ -303,13 +280,13 @@ contract DSCEngine is ReentrancyGuard {
         _redeemCollateral(user, msg.sender, collateral, totalCollateralToRedeem);
 
         // 4.
-        // Burn DSC from liquidator
-        _burnDsc(debtToCover, user, msg.sender);
+        // Burn SFC from liquidator
+        _burnSfc(debtToCover, user, msg.sender);
 
         // Check health factor improved
         uint256 endingUserHealthFactor = _healthFactor(user);
         if (endingUserHealthFactor <= startingUserHealthFactor) {
-            revert DSCEngine__HealthFactorNotImproved();
+            revert SFCEngine__HealthFactorNotImproved();
         }
 
         // if this process ruined the liquidaror's health factor, we should not let them do so.
@@ -321,21 +298,21 @@ contract DSCEngine is ReentrancyGuard {
     ////////////////////////////////////////////////*/
 
     /**
-     * @dev Low-level internal function to burn DSC.
+     * @dev Low-level internal function to burn SFC.
      * Do not call unless the function calling it is checking for health factor being broken.
      */
-    function _burnDsc(uint256 amountDscToBurn, address onBehalfOf, address dscFrom) internal {
-        if (sDscMinted[onBehalfOf] < amountDscToBurn) {
-            revert DSCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn();
+    function _burnSfc(uint256 amountSfcToBurn, address onBehalfOf, address sfcFrom) internal {
+        if (sSfcMinted[onBehalfOf] < amountSfcToBurn) {
+            revert SFCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn();
         } // added this check to prevent underflow
 
-        sDscMinted[onBehalfOf] -= amountDscToBurn;
-        bool success = I_DSC.transferFrom(dscFrom, address(this), amountDscToBurn);
+        sSfcMinted[onBehalfOf] -= amountSfcToBurn;
+        bool success = I_SFC.transferFrom(sfcFrom, address(this), amountSfcToBurn);
         // This conditional is hypothetically unreachable.
         if (!success) {
-            revert DSCEngine__TransferFailedInBurnDsc();
+            revert SFCEngine__TransferFailedInBurnSfc();
         }
-        I_DSC.burn(amountDscToBurn);
+        I_SFC.burn(amountSfcToBurn);
     }
 
     function _redeemCollateral(address from, address to, address tokenCollateralAddress, uint256 amountCollateral)
@@ -346,7 +323,7 @@ contract DSCEngine is ReentrancyGuard {
 
         bool success = IERC20(tokenCollateralAddress).transfer(to, amountCollateral);
         if (!success) {
-            revert DSCEngine__TransferFailedInRedeemCollateral();
+            revert SFCEngine__TransferFailedInRedeemCollateral();
         }
     }
 
@@ -358,9 +335,9 @@ contract DSCEngine is ReentrancyGuard {
     function _getAccountInformation(address user)
         private
         view
-        returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
+        returns (uint256 totalSfcMinted, uint256 collateralValueInUsd)
     {
-        totalDscMinted = sDscMinted[user];
+        totalSfcMinted = sSfcMinted[user];
         collateralValueInUsd = getAccountCollateralValue(user);
     }
 
@@ -371,17 +348,17 @@ contract DSCEngine is ReentrancyGuard {
      */
     function _healthFactor(address user) private view returns (uint256) {
         // 1. Get the USD value of all collateral.
-        // 2. Get the USD value of all DSC minted.
-        (uint256 totalDscMinted, uint256 collateralValueInUsd) = _getAccountInformation(user);
+        // 2. Get the USD value of all SFC minted.
+        (uint256 totalSfcMinted, uint256 collateralValueInUsd) = _getAccountInformation(user);
 
-        if (totalDscMinted == 0) {
+        if (totalSfcMinted == 0) {
             /* FOUND IT */
             return type(uint256).max;
         }
 
         // 3. Calculate health factor.
         uint256 collateralAdjustedForThreshold = (collateralValueInUsd * LIQUIDATION_THRESHOLD) / LIQUIDATION_PRECISION;
-        return (collateralAdjustedForThreshold * PRECISION) / totalDscMinted;
+        return (collateralAdjustedForThreshold * PRECISION) / totalSfcMinted;
     }
 
     // 1. Check health factor (do they have enough collateral?)
@@ -389,7 +366,7 @@ contract DSCEngine is ReentrancyGuard {
     function _revertIfHealthFactorIsBroken(address user) internal view {
         uint256 userHealthFactor = _healthFactor(user);
         if (userHealthFactor < MIN_HEALTH_FACTOR) {
-            revert DSCEngine__BreaksHealthFactor();
+            revert SFCEngine__BreaksHealthFactor();
         }
     }
 
@@ -428,10 +405,10 @@ contract DSCEngine is ReentrancyGuard {
     function getAccountInformation(address user)
         external
         view
-        returns (uint256 totalDscMinted, uint256 collateralValueInUsd)
+        returns (uint256 totalSfcMinted, uint256 collateralValueInUsd)
     {
-        (totalDscMinted, collateralValueInUsd) = _getAccountInformation(user);
-        return (totalDscMinted, collateralValueInUsd);
+        (totalSfcMinted, collateralValueInUsd) = _getAccountInformation(user);
+        return (totalSfcMinted, collateralValueInUsd);
     }
 
     /*////////////////////////////////////////////////
@@ -440,12 +417,12 @@ contract DSCEngine is ReentrancyGuard {
     function _getValidatedPrice(AggregatorV3Interface priceFeed) internal view returns (uint256) {
         (uint80 roundId, int256 price,, uint256 updatedAt, uint80 answeredInRound) = priceFeed.latestRoundData();
 
-        if (price <= 0) revert DSCEngine__OraclePriceInvalid();
+        if (price <= 0) revert SFCEngine__OraclePriceInvalid();
         if (answeredInRound < roundId) {
-            revert DSCEngine__OracleRoundIncomplete();
+            revert SFCEngine__OracleRoundIncomplete();
         }
         if (block.timestamp - updatedAt > MAX_PRICE_AGE) {
-            revert DSCEngine__OraclePriceStale();
+            revert SFCEngine__OraclePriceStale();
         }
 
         return uint256(price);
@@ -498,7 +475,7 @@ contract DSCEngine is ReentrancyGuard {
         return sPriceFeeds[token];
     }
 
-    function getDsc() external view returns (address) {
-        return address(I_DSC);
+    function getSfc() external view returns (address) {
+        return address(I_SFC);
     }
 }

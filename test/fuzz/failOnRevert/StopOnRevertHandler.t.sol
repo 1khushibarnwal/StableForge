@@ -8,15 +8,15 @@ import {Test} from "forge-std/Test.sol";
 import {ERC20Mock} from "../../mocks/ERC20Mock.sol";
 
 import {MockV3Aggregator} from "../../mocks/MockV3Aggregator.sol";
-import {DSCEngine} from "../../../src/DSCEngine.sol";
-import {DecentralizedStableCoin} from "../../../src/DecentralizedStableCoin.sol";
+import {SFCEngine} from "../../../src/SFCEngine.sol";
+import {StableForgeCoin} from "../../../src/StableForgeCoin.sol";
 
 contract StopOnRevertHandler is Test {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     // Deployed contracts to interact with
-    DSCEngine public dscEngine;
-    DecentralizedStableCoin public dsc;
+    SFCEngine public sfcEngine;
+    StableForgeCoin public sfc;
     MockV3Aggregator public ethUsdPriceFeed;
     MockV3Aggregator public btcUsdPriceFeed;
     ERC20Mock public weth;
@@ -25,38 +25,51 @@ contract StopOnRevertHandler is Test {
     // Ghost Variables
     uint96 public constant MAX_DEPOSIT_SIZE = type(uint96).max;
 
-    constructor(DSCEngine _dscEngine, DecentralizedStableCoin _dsc) {
-        dscEngine = _dscEngine;
-        dsc = _dsc;
+    constructor(SFCEngine _sfcEngine, StableForgeCoin _sfc) {
+        sfcEngine = _sfcEngine;
+        sfc = _sfc;
 
-        address[] memory collateralTokens = dscEngine.getCollateralTokens();
+        address[] memory collateralTokens = sfcEngine.getCollateralTokens();
         weth = ERC20Mock(collateralTokens[0]);
         wbtc = ERC20Mock(collateralTokens[1]);
 
-        ethUsdPriceFeed = MockV3Aggregator(dscEngine.getCollateralTokenPriceFeed(address(weth)));
-        btcUsdPriceFeed = MockV3Aggregator(dscEngine.getCollateralTokenPriceFeed(address(wbtc)));
+        ethUsdPriceFeed = MockV3Aggregator(
+            sfcEngine.getCollateralTokenPriceFeed(address(weth))
+        );
+        btcUsdPriceFeed = MockV3Aggregator(
+            sfcEngine.getCollateralTokenPriceFeed(address(wbtc))
+        );
     }
 
     // FUNCTOINS TO INTERACT WITH
 
     ///////////////
-    // DSCEngine //
+    // SFCEngine //
     ///////////////
-    function mintAndDepositCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
+    function mintAndDepositCollateral(
+        uint256 collateralSeed,
+        uint256 amountCollateral
+    ) public {
         // must be more than 0
         amountCollateral = bound(amountCollateral, 1, MAX_DEPOSIT_SIZE);
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
 
         vm.startPrank(msg.sender);
         collateral.mint(msg.sender, amountCollateral);
-        collateral.approve(address(dscEngine), amountCollateral);
-        dscEngine.depositCollateral(address(collateral), amountCollateral);
+        collateral.approve(address(sfcEngine), amountCollateral);
+        sfcEngine.depositCollateral(address(collateral), amountCollateral);
         vm.stopPrank();
     }
 
-    function redeemCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
+    function redeemCollateral(
+        uint256 collateralSeed,
+        uint256 amountCollateral
+    ) public {
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        uint256 maxCollateral = dscEngine.getCollateralBalanceOfUser(msg.sender, address(collateral));
+        uint256 maxCollateral = sfcEngine.getCollateralBalanceOfUser(
+            msg.sender,
+            address(collateral)
+        );
 
         amountCollateral = bound(amountCollateral, 0, maxCollateral);
         //vm.prank(msg.sender);
@@ -64,49 +77,59 @@ contract StopOnRevertHandler is Test {
             return;
         }
         vm.prank(msg.sender);
-        dscEngine.redeemCollateral(address(collateral), amountCollateral);
+        sfcEngine.redeemCollateral(address(collateral), amountCollateral);
     }
 
-    function burnDsc(uint256 amountDsc) public {
+    function burnSfc(uint256 amountSfc) public {
         // Must burn more than 0
-        amountDsc = bound(amountDsc, 0, dsc.balanceOf(msg.sender));
-        if (amountDsc == 0) {
+        amountSfc = bound(amountSfc, 0, sfc.balanceOf(msg.sender));
+        if (amountSfc == 0) {
             return;
         }
         vm.startPrank(msg.sender);
-        dsc.approve(address(dscEngine), amountDsc);
-        dscEngine.burnDsc(amountDsc);
+        sfc.approve(address(sfcEngine), amountSfc);
+        sfcEngine.burnSfc(amountSfc);
         vm.stopPrank();
     }
 
-    // Only the DSCEngine can mint DSC!
-    // function mintDsc(uint256 amountDsc) public {
-    //     amountDsc = bound(amountDsc, 0, MAX_DEPOSIT_SIZE);
-    //     vm.prank(dsc.owner());
-    //     dsc.mint(msg.sender, amountDsc);
+    // Only the SFCEngine can mint SFC!
+    // function mintSfc(uint256 amountSfc) public {
+    //     amountSfc = bound(amountSfc, 0, MAX_DEPOSIT_SIZE);
+    //     vm.prank(sfc.owner());
+    //     sfc.mint(msg.sender, amountSfc);
     // }
 
-    function liquidate(uint256 collateralSeed, address userToBeLiquidated, uint256 debtToCover) public {
-        uint256 minHealthFactor = dscEngine.getMinHealthFactor();
-        uint256 userHealthFactor = dscEngine.getHealthFactor(userToBeLiquidated);
+    function liquidate(
+        uint256 collateralSeed,
+        address userToBeLiquidated,
+        uint256 debtToCover
+    ) public {
+        uint256 minHealthFactor = sfcEngine.getMinHealthFactor();
+        uint256 userHealthFactor = sfcEngine.getHealthFactor(
+            userToBeLiquidated
+        );
         if (userHealthFactor >= minHealthFactor) {
             return;
         }
         debtToCover = bound(debtToCover, 1, uint256(type(uint96).max));
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        dscEngine.liquidate(address(collateral), userToBeLiquidated, debtToCover);
+        sfcEngine.liquidate(
+            address(collateral),
+            userToBeLiquidated,
+            debtToCover
+        );
     }
 
     /////////////////////////////
-    // DecentralizedStableCoin //
+    // StableForgeCoin //
     /////////////////////////////
-    function transferDsc(uint256 amountDsc, address to) public {
+    function transferSfc(uint256 amountSfc, address to) public {
         if (to == address(0)) {
             to = address(1);
         }
-        amountDsc = bound(amountDsc, 0, dsc.balanceOf(msg.sender));
+        amountSfc = bound(amountSfc, 0, sfc.balanceOf(msg.sender));
         vm.prank(msg.sender);
-        bool success = dsc.transfer(to, amountDsc);
+        bool success = sfc.transfer(to, amountSfc);
         if (!success) {
             return;
         }
@@ -115,16 +138,23 @@ contract StopOnRevertHandler is Test {
     /////////////////////////////
     // Aggregator //
     /////////////////////////////
-    function updateCollateralPrice(uint96 newPrice, uint256 collateralSeed) public {
+    function updateCollateralPrice(
+        uint96 newPrice,
+        uint256 collateralSeed
+    ) public {
         int256 intNewPrice = int256(uint256(newPrice));
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        MockV3Aggregator priceFeed = MockV3Aggregator(dscEngine.getCollateralTokenPriceFeed(address(collateral)));
+        MockV3Aggregator priceFeed = MockV3Aggregator(
+            sfcEngine.getCollateralTokenPriceFeed(address(collateral))
+        );
 
         priceFeed.updateAnswer(intNewPrice);
     }
 
     /// Helper Functions
-    function _getCollateralFromSeed(uint256 collateralSeed) private view returns (ERC20Mock) {
+    function _getCollateralFromSeed(
+        uint256 collateralSeed
+    ) private view returns (ERC20Mock) {
         if (collateralSeed % 2 == 0) {
             return weth;
         } else {

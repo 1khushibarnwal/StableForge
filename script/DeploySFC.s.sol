@@ -2,15 +2,15 @@
 pragma solidity ^0.8.18;
 
 import {Script} from "forge-std/Script.sol";
-import {DecentralizedStableCoin} from "../src/DecentralizedStableCoin.sol";
-import {DSCEngine} from "../src/DSCEngine.sol";
+import {StableForgeCoin} from "../src/StableForgeCoin.sol";
+import {SFCEngine} from "../src/SFCEngine.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 
-contract DeployDSC is Script {
+contract DeploySFC is Script {
     address[] public tokenAddresses;
     address[] public priceFeedAddresses;
 
-    function run() external returns (DecentralizedStableCoin, DSCEngine, HelperConfig) {
+    function run() external returns (StableForgeCoin, SFCEngine, HelperConfig) {
         HelperConfig helperConfig = new HelperConfig();
 
         (address wethUsdPriceFeed, address wbtcUsdPriceFeed, address weth, address wbtc, uint256 deployerKey) =
@@ -20,12 +20,12 @@ contract DeployDSC is Script {
         priceFeedAddresses = [wethUsdPriceFeed, wbtcUsdPriceFeed]; // corresponding price feed addresses
 
         vm.startBroadcast(deployerKey);
-        DecentralizedStableCoin dsc = new DecentralizedStableCoin();
-        DSCEngine dscEngine = new DSCEngine(tokenAddresses, priceFeedAddresses, address(dsc));
+        StableForgeCoin sfc = new StableForgeCoin();
+        SFCEngine sfcEngine = new SFCEngine(tokenAddresses, priceFeedAddresses, address(sfc));
 
-        dsc.transferOwnership(address(dscEngine));
+        sfc.transferOwnership(address(sfcEngine));
         vm.stopBroadcast();
 
-        return (dsc, dscEngine, helperConfig);
+        return (sfc, sfcEngine, helperConfig);
     }
 }

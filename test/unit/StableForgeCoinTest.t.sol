@@ -2,10 +2,10 @@
 pragma solidity ^0.8.18;
 
 import {Test} from "forge-std/Test.sol";
-import {DecentralizedStableCoin} from "../../src/DecentralizedStableCoin.sol";
+import {StableForgeCoin} from "../../src/StableForgeCoin.sol";
 
-contract DecentralizedStableCoinTest is Test {
-    DecentralizedStableCoin internal dsc;
+contract StableForgeCoinTest is Test {
+    StableForgeCoin internal sfc;
 
     address internal owner = address(this); // test contract deploys it
     address internal user = makeAddr("user");
@@ -13,7 +13,7 @@ contract DecentralizedStableCoinTest is Test {
     uint256 internal constant AMOUNT = 100 ether;
 
     function setUp() external {
-        dsc = new DecentralizedStableCoin();
+        sfc = new StableForgeCoin();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -21,12 +21,12 @@ contract DecentralizedStableCoinTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testConstructorSetsNameAndSymbol() public view {
-        assertEq(dsc.name(), "DecentralizedStableCoin");
-        assertEq(dsc.symbol(), "DSC");
+        assertEq(sfc.name(), "StableForgeCoin");
+        assertEq(sfc.symbol(), "SFC");
     }
 
     function testConstructorSetsOwnerCorrectly() public view {
-        assertEq(dsc.owner(), owner);
+        assertEq(sfc.owner(), owner);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -34,26 +34,26 @@ contract DecentralizedStableCoinTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testOwnerCanMint() public {
-        bool success = dsc.mint(user, AMOUNT);
+        bool success = sfc.mint(user, AMOUNT);
 
         assertTrue(success);
-        assertEq(dsc.balanceOf(user), AMOUNT);
+        assertEq(sfc.balanceOf(user), AMOUNT);
     }
 
     function testMintRevertsIfNotOwner() public {
         vm.prank(user);
         vm.expectRevert(); // Ownable revert
-        dsc.mint(user, AMOUNT);
+        sfc.mint(user, AMOUNT);
     }
 
     function testMintRevertsIfAmountIsZero() public {
-        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__MustBeMoreThanZero.selector);
-        dsc.mint(user, 0);
+        vm.expectRevert(StableForgeCoin.StableForgeCoin__MustBeMoreThanZero.selector);
+        sfc.mint(user, 0);
     }
 
     function testMintRevertsIfToIsZeroAddress() public {
-        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__NotZeroAddress.selector);
-        dsc.mint(address(0), AMOUNT);
+        vm.expectRevert(StableForgeCoin.StableForgeCoin__NotZeroAddress.selector);
+        sfc.mint(address(0), AMOUNT);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -61,38 +61,38 @@ contract DecentralizedStableCoinTest is Test {
     //////////////////////////////////////////////////////////////*/
 
     function testOwnerCanBurn() public {
-        dsc.mint(owner, AMOUNT);
+        sfc.mint(owner, AMOUNT);
 
-        dsc.burn(AMOUNT);
+        sfc.burn(AMOUNT);
 
-        assertEq(dsc.balanceOf(owner), 0);
+        assertEq(sfc.balanceOf(owner), 0);
     }
 
     function testBurnRevertsIfNotOwner() public {
-        dsc.mint(owner, AMOUNT);
+        sfc.mint(owner, AMOUNT);
 
         vm.prank(user);
         vm.expectRevert(); // Ownable revert
-        dsc.burn(AMOUNT);
+        sfc.burn(AMOUNT);
     }
 
     function testBurnRevertsIfAmountIsZero() public {
-        dsc.mint(owner, AMOUNT);
+        sfc.mint(owner, AMOUNT);
 
-        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__MustBeMoreThanZero.selector);
-        dsc.burn(0);
+        vm.expectRevert(StableForgeCoin.StableForgeCoin__MustBeMoreThanZero.selector);
+        sfc.burn(0);
     }
 
     function testBurnRevertsIfAmountExceedsBalance() public {
-        vm.expectRevert(DecentralizedStableCoin.DecentralizedStableCoin__AmountExceedsBalance.selector);
-        dsc.burn(1 ether);
+        vm.expectRevert(StableForgeCoin.StableForgeCoin__AmountExceedsBalance.selector);
+        sfc.burn(1 ether);
     }
 
     function testBurnReducesBalanceCorrectly() public {
-        dsc.mint(owner, AMOUNT);
+        sfc.mint(owner, AMOUNT);
 
-        dsc.burn(40 ether);
+        sfc.burn(40 ether);
 
-        assertEq(dsc.balanceOf(owner), 60 ether);
+        assertEq(sfc.balanceOf(owner), 60 ether);
     }
 }
