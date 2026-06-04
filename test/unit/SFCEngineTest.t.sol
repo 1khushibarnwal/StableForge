@@ -24,11 +24,7 @@ contract ERC20FailTransfer is ERC20Mock {
 contract ERC20FailTransferFrom is ERC20Mock {
     constructor() ERC20Mock("FAIL", "FAIL", msg.sender, 0) {}
 
-    function transferFrom(
-        address,
-        address,
-        uint256
-    ) public pure override returns (bool) {
+    function transferFrom(address, address, uint256) public pure override returns (bool) {
         return false;
     }
 }
@@ -43,18 +39,9 @@ contract SFCEngineTest is Test {
     address internal wbtc;
     address internal btcUsdPriceFeed;
 
-    event CollateralDeposited(
-        address indexed user,
-        address indexed token,
-        uint256 amount
-    );
+    event CollateralDeposited(address indexed user, address indexed token, uint256 amount);
 
-    event CollateralRedeemed(
-        address indexed from,
-        address indexed to,
-        address indexed token,
-        uint256 amount
-    );
+    event CollateralRedeemed(address indexed from, address indexed to, address indexed token, uint256 amount);
 
     address public user = makeAddr("user");
     address internal liquidator = makeAddr("liquidator");
@@ -67,15 +54,12 @@ contract SFCEngineTest is Test {
     int256 public constant BTC_USD_PRICE = 3000e8;
     uint256 public constant MINT_VALUE_TO_TEST_LIQUIDATION_WORKS = 100 ether;
     uint256 public constant DEBT_TO_COVER = 50 ether;
-    uint256
-        public constant DEBT_TO_COVER_TO_CHECK_IF_LIQUIDATOR_RECEIVES_BONUS =
-        3000 ether;
+    uint256 public constant DEBT_TO_COVER_TO_CHECK_IF_LIQUIDATOR_RECEIVES_BONUS = 3000 ether;
 
     function setUp() public {
         deployer = new DeploySFC();
         (sfc, sfcEngine, config) = deployer.run();
-        (ethUsdPriceFeed, btcUsdPriceFeed, weth, wbtc, ) = config
-            .activeNetworkConfig();
+        (ethUsdPriceFeed, btcUsdPriceFeed, weth, wbtc,) = config.activeNetworkConfig();
 
         ERC20Mock(weth).mint(user, STARTING_ERC20_BALANCE);
         ERC20Mock(wbtc).mint(user, STARTING_ERC20_BALANCE);
@@ -92,25 +76,13 @@ contract SFCEngineTest is Test {
         priceFeedAddresses.push(ethUsdPriceFeed);
         priceFeedAddresses.push(btcUsdPriceFeed);
 
-        vm.expectRevert(
-            SFCEngine
-                .SFCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength
-                .selector
-        );
+        vm.expectRevert(SFCEngine.SFCEngine__TokenAddressesAndPriceFeedAddressesMustBeSameLength.selector);
         new SFCEngine(tokenAddresses, priceFeedAddresses, address(sfc));
     }
 
     function testConstructorSetsPriceFeedsCorrectly() public {
-        ERC20Mock wethForCheckingPrice = new ERC20Mock(
-            "Wrapped ETH",
-            "WETH",
-            address(this),
-            0
-        );
-        MockV3Aggregator ethUsdFeed = new MockV3Aggregator(
-            DECIMALS,
-            ETH_USD_PRICE
-        );
+        ERC20Mock wethForCheckingPrice = new ERC20Mock("Wrapped ETH", "WETH", address(this), 0);
+        MockV3Aggregator ethUsdFeed = new MockV3Aggregator(DECIMALS, ETH_USD_PRICE);
 
         address[] memory tokens = new address[](1);
         address[] memory priceFeeds = new address[](1);
@@ -122,34 +94,16 @@ contract SFCEngineTest is Test {
 
         SFCEngine engine = new SFCEngine(tokens, priceFeeds, address(sfc));
 
-        address storedFeed = engine.getSPriceFeed(
-            address(wethForCheckingPrice)
-        );
+        address storedFeed = engine.getSPriceFeed(address(wethForCheckingPrice));
         assertEq(storedFeed, address(ethUsdFeed));
     }
 
     function testConstructorRegistersCollateralTokens() public {
-        ERC20Mock wethForCheckingRegistration = new ERC20Mock(
-            "Wrapped ETH",
-            "WETH",
-            address(this),
-            0
-        );
-        ERC20Mock wbtcForCheckingRegistration = new ERC20Mock(
-            "Wrapped BTC",
-            "WBTC",
-            address(this),
-            0
-        );
+        ERC20Mock wethForCheckingRegistration = new ERC20Mock("Wrapped ETH", "WETH", address(this), 0);
+        ERC20Mock wbtcForCheckingRegistration = new ERC20Mock("Wrapped BTC", "WBTC", address(this), 0);
 
-        MockV3Aggregator ethFeed = new MockV3Aggregator(
-            DECIMALS,
-            ETH_USD_PRICE
-        );
-        MockV3Aggregator btcFeed = new MockV3Aggregator(
-            DECIMALS,
-            BTC_USD_PRICE
-        );
+        MockV3Aggregator ethFeed = new MockV3Aggregator(DECIMALS, ETH_USD_PRICE);
+        MockV3Aggregator btcFeed = new MockV3Aggregator(DECIMALS, BTC_USD_PRICE);
 
         address[] memory tokens = new address[](2);
         address[] memory feeds = new address[](2);
@@ -242,12 +196,7 @@ contract SFCEngineTest is Test {
     }
 
     function testRevertsWithUnapprovedCollateral() public {
-        ERC20Mock ranToken = new ERC20Mock(
-            "RAN",
-            "RAN",
-            address(this),
-            AMOUNT_COLLATERAL
-        );
+        ERC20Mock ranToken = new ERC20Mock("RAN", "RAN", address(this), AMOUNT_COLLATERAL);
         vm.startPrank(user);
         vm.expectRevert(SFCEngine.SFCEngine__NotAllowedToken.selector);
         sfcEngine.depositCollateral(address(ranToken), AMOUNT_COLLATERAL);
@@ -259,24 +208,14 @@ contract SFCEngineTest is Test {
         ERC20Mock(weth).approve(address(sfcEngine), AMOUNT_COLLATERAL);
     }
 
-    function testCanDepositedCollateralAndGetAccountInfo()
-        public
-        depositedCollateral
-    {
-        (uint256 totalSfcMinted, uint256 collateralValueInUsd) = sfcEngine
-            .getAccountInformation(user);
-        uint256 expectedDepositedAmount = sfcEngine.getTokenAmountFromUsd(
-            weth,
-            collateralValueInUsd
-        );
+    function testCanDepositedCollateralAndGetAccountInfo() public depositedCollateral {
+        (uint256 totalSfcMinted, uint256 collateralValueInUsd) = sfcEngine.getAccountInformation(user);
+        uint256 expectedDepositedAmount = sfcEngine.getTokenAmountFromUsd(weth, collateralValueInUsd);
         assertEq(totalSfcMinted, 0);
         assertEq(expectedDepositedAmount, AMOUNT_COLLATERAL);
     }
 
-    function testDepositCollateralUpdatesStateAndTransfersTokens()
-        public
-        approved
-    {
+    function testDepositCollateralUpdatesStateAndTransfersTokens() public approved {
         vm.startPrank(user);
         sfcEngine.depositCollateral(weth, AMOUNT_COLLATERAL);
         vm.stopPrank();
@@ -314,10 +253,7 @@ contract SFCEngineTest is Test {
 
     function testRevertsIfTransferFromFails() public {
         ERC20FailTransferFrom badToken = new ERC20FailTransferFrom();
-        MockV3Aggregator badFeed = new MockV3Aggregator(
-            DECIMALS,
-            ETH_USD_PRICE
-        );
+        MockV3Aggregator badFeed = new MockV3Aggregator(DECIMALS, ETH_USD_PRICE);
 
         address[] memory tokens = new address[](1);
         address[] memory feeds = new address[](1);
@@ -331,9 +267,7 @@ contract SFCEngineTest is Test {
         badToken.mint(user, AMOUNT_COLLATERAL);
         badToken.approve(address(engine), AMOUNT_COLLATERAL);
 
-        vm.expectRevert(
-            SFCEngine.SFCEngine__TransferFailedInDepositCollateral.selector
-        );
+        vm.expectRevert(SFCEngine.SFCEngine__TransferFailedInDepositCollateral.selector);
         engine.depositCollateral(address(badToken), AMOUNT_COLLATERAL);
 
         vm.stopPrank();
@@ -353,18 +287,11 @@ contract SFCEngineTest is Test {
         uint256 sfcToMint = 5000e18; // safe amount
 
         vm.startPrank(user);
-        sfcEngine.depositCollateralAndMintSfc(
-            weth,
-            AMOUNT_COLLATERAL,
-            sfcToMint
-        );
+        sfcEngine.depositCollateralAndMintSfc(weth, AMOUNT_COLLATERAL, sfcToMint);
         vm.stopPrank();
 
         // Assert collateral was deposited
-        uint256 collateralBalance = sfcEngine.getCollateralBalanceOfUser(
-            user,
-            weth
-        );
+        uint256 collateralBalance = sfcEngine.getCollateralBalanceOfUser(user, weth);
         assertEq(collateralBalance, AMOUNT_COLLATERAL);
 
         // Assert SFC was minted
@@ -382,20 +309,14 @@ contract SFCEngineTest is Test {
 
         vm.stopPrank();
 
-        uint256 collateral = sfcEngine.getCollateralBalanceOfUser(
-            user,
-            address(weth)
-        );
+        uint256 collateral = sfcEngine.getCollateralBalanceOfUser(user, address(weth));
         uint256 sfcBalance = sfc.balanceOf(user);
 
         assertEq(collateral, AMOUNT_COLLATERAL);
         assertEq(sfcBalance, MINT_VALUE);
     }
 
-    function testDepositAndMintIsEquivalentToSeparateCalls()
-        public
-        depositedAndApproved
-    {
+    function testDepositAndMintIsEquivalentToSeparateCalls() public depositedAndApproved {
         uint256 sfcToMint = 5000e18;
 
         vm.startPrank(user);
@@ -405,10 +326,7 @@ contract SFCEngineTest is Test {
 
         vm.stopPrank();
 
-        assertEq(
-            sfcEngine.getCollateralBalanceOfUser(user, weth),
-            AMOUNT_COLLATERAL
-        );
+        assertEq(sfcEngine.getCollateralBalanceOfUser(user, weth), AMOUNT_COLLATERAL);
         assertEq(sfc.balanceOf(user), sfcToMint);
     }
 
@@ -426,11 +344,7 @@ contract SFCEngineTest is Test {
         fakeToken.approve(address(sfcEngine), type(uint256).max);
 
         vm.expectRevert();
-        sfcEngine.depositCollateralAndMintSfc(
-            address(fakeToken),
-            10 ether,
-            100e18
-        );
+        sfcEngine.depositCollateralAndMintSfc(address(fakeToken), 10 ether, 100e18);
         vm.stopPrank();
     }
 
@@ -449,10 +363,7 @@ contract SFCEngineTest is Test {
         uint256 usdAmount = 20_000e18;
         uint256 expectedEthAmount = 10 ether;
 
-        uint256 actualEthAmount = sfcEngine.getTokenAmountFromUsd(
-            weth,
-            usdAmount
-        );
+        uint256 actualEthAmount = sfcEngine.getTokenAmountFromUsd(weth, usdAmount);
 
         assertEq(actualEthAmount, expectedEthAmount);
     }
@@ -498,21 +409,14 @@ contract SFCEngineTest is Test {
         assertEq(actualUsdValue, expectedTotalUsdValue);
     }
 
-    function testGetAccountInformationReturnsCorrectValues()
-        public
-        depositedWeth
-    {
-        (uint256 totalSfcMinted, uint256 collateralUsdValue) = sfcEngine
-            .getAccountInformation(user);
+    function testGetAccountInformationReturnsCorrectValues() public depositedWeth {
+        (uint256 totalSfcMinted, uint256 collateralUsdValue) = sfcEngine.getAccountInformation(user);
 
         assertEq(totalSfcMinted, 0);
         assertEq(collateralUsdValue, 20_000e18);
     }
 
-    function testGetAccountCollateralValueReturnsZeroForEmptyUser()
-        public
-        view
-    {
+    function testGetAccountCollateralValueReturnsZeroForEmptyUser() public view {
         uint256 value = sfcEngine.getAccountCollateralValue(user);
 
         assertEq(value, 0);
@@ -530,10 +434,7 @@ contract SFCEngineTest is Test {
         _;
     }
 
-    function testRedeemCollateralReducesBalanceAndTransfersTokens()
-        public
-        depositedCollateral
-    {
+    function testRedeemCollateralReducesBalanceAndTransfersTokens() public depositedCollateral {
         //ERC20Mock(weth).mint(user, MINT_VALUE); -> Not needed here, coz redeeming SFC doesn't require user to have SFC tokens.
         uint256 redeemAmount = 5 ether;
 
@@ -544,10 +445,7 @@ contract SFCEngineTest is Test {
         vm.stopPrank();
 
         // Storage updated
-        uint256 remainingCollateral = sfcEngine.getCollateralBalanceOfUser(
-            user,
-            weth
-        );
+        uint256 remainingCollateral = sfcEngine.getCollateralBalanceOfUser(user, weth);
         assertEq(remainingCollateral, AMOUNT_COLLATERAL - redeemAmount);
 
         // Tokens transferred back
@@ -570,10 +468,7 @@ contract SFCEngineTest is Test {
     function testRedeemCollateralRevertsIfTransferFails() public {
         // Arrange
         ERC20FailTransfer badToken = new ERC20FailTransfer();
-        MockV3Aggregator badFeed = new MockV3Aggregator(
-            DECIMALS,
-            ETH_USD_PRICE
-        );
+        MockV3Aggregator badFeed = new MockV3Aggregator(DECIMALS, ETH_USD_PRICE);
 
         address[] memory tokens = new address[](1);
         address[] memory feeds = new address[](1);
@@ -591,9 +486,7 @@ contract SFCEngineTest is Test {
         engine.depositCollateral(address(badToken), AMOUNT_COLLATERAL);
 
         // Act + Assert
-        vm.expectRevert(
-            SFCEngine.SFCEngine__TransferFailedInRedeemCollateral.selector
-        );
+        vm.expectRevert(SFCEngine.SFCEngine__TransferFailedInRedeemCollateral.selector);
         engine.redeemCollateral(address(badToken), 1 ether);
         vm.stopPrank();
     }
@@ -616,9 +509,7 @@ contract SFCEngineTest is Test {
         badToken.approve(address(engine), AMOUNT_COLLATERAL);
 
         // Act + Assert
-        vm.expectRevert(
-            SFCEngine.SFCEngine__TransferFailedInDepositCollateral.selector
-        );
+        vm.expectRevert(SFCEngine.SFCEngine__TransferFailedInDepositCollateral.selector);
         engine.depositCollateral(address(badToken), AMOUNT_COLLATERAL);
         vm.stopPrank();
     }
@@ -670,7 +561,7 @@ contract SFCEngineTest is Test {
         vm.stopPrank();
 
         // Assert
-        (uint256 totalMinted, ) = sfcEngine.getAccountInformation(user);
+        (uint256 totalMinted,) = sfcEngine.getAccountInformation(user);
         assertEq(totalMinted, 0);
 
         vm.stopPrank();
@@ -684,11 +575,7 @@ contract SFCEngineTest is Test {
         sfcEngine.mintSfc(MINT_VALUE);
 
         // Act + Assert
-        vm.expectRevert(
-            SFCEngine
-                .SFCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn
-                .selector
-        );
+        vm.expectRevert(SFCEngine.SFCEngine__BurnFailedBecauseMintedLesserThanAttemptedToBurn.selector);
         sfcEngine.burnSfc(MINT_VALUE + 1);
         vm.stopPrank();
     }
@@ -765,7 +652,7 @@ contract SFCEngineTest is Test {
         uint256 mintAmount = 5 ether;
         sfcEngine.mintSfc(mintAmount);
 
-        (uint256 totalSfcMinted, ) = sfcEngine.getAccountInformation(user);
+        (uint256 totalSfcMinted,) = sfcEngine.getAccountInformation(user);
         assertEq(totalSfcMinted, mintAmount);
 
         vm.stopPrank();
@@ -784,11 +671,7 @@ contract SFCEngineTest is Test {
         vm.stopPrank();
 
         // Mock SFC mint to return false
-        vm.mockCall(
-            address(sfc),
-            abi.encodeWithSelector(sfc.mint.selector),
-            abi.encode(false)
-        );
+        vm.mockCall(address(sfc), abi.encodeWithSelector(sfc.mint.selector), abi.encode(false));
 
         // Act + Assert
         vm.startPrank(user);
@@ -863,9 +746,7 @@ contract SFCEngineTest is Test {
         vm.stopPrank();
 
         // Crash ETH price -> user becomes unhealthy
-        MockV3Aggregator ethUsdFeed = MockV3Aggregator(
-            sfcEngine.getCollateralTokenPriceFeed(weth)
-        );
+        MockV3Aggregator ethUsdFeed = MockV3Aggregator(sfcEngine.getCollateralTokenPriceFeed(weth));
 
         ethUsdFeed.updateAnswer(500e8);
 
@@ -1028,10 +909,7 @@ contract SFCEngineTest is Test {
                     TEST GETTERS
     ////////////////////////////////////////////////*/
     function testGetAdditionalFeedPrecision() public view {
-        assertEq(
-            sfcEngine.getAdditionalFeedPrecision(),
-            sfcEngine.ADDITIONAL_FEED_PRECISION()
-        );
+        assertEq(sfcEngine.getAdditionalFeedPrecision(), sfcEngine.ADDITIONAL_FEED_PRECISION());
     }
 
     function testGetPrecision() public view {
@@ -1039,17 +917,11 @@ contract SFCEngineTest is Test {
     }
 
     function testGetLiquidationThreshold() public view {
-        assertEq(
-            sfcEngine.getLiquidationThreshold(),
-            sfcEngine.LIQUIDATION_THRESHOLD()
-        );
+        assertEq(sfcEngine.getLiquidationThreshold(), sfcEngine.LIQUIDATION_THRESHOLD());
     }
 
     function testGetLiquidationPrecision() public view {
-        assertEq(
-            sfcEngine.getLiquidationPrecision(),
-            sfcEngine.LIQUIDATION_PRECISION()
-        );
+        assertEq(sfcEngine.getLiquidationPrecision(), sfcEngine.LIQUIDATION_PRECISION());
     }
 
     function testGetMinHealthFactor() public view {
@@ -1057,10 +929,7 @@ contract SFCEngineTest is Test {
     }
 
     function testGetLiquidationBonus() public view {
-        assertEq(
-            sfcEngine.getLiquidationBonus(),
-            sfcEngine.LIQUIDATION_BONUS()
-        );
+        assertEq(sfcEngine.getLiquidationBonus(), sfcEngine.LIQUIDATION_BONUS());
     }
 
     function testGetSfcReturnsCorrectAddress() public view {
@@ -1073,10 +942,7 @@ contract SFCEngineTest is Test {
     }
 
     function testGetSPriceFeedReturnsSameValue() public view {
-        assertEq(
-            sfcEngine.getSPriceFeed(weth),
-            sfcEngine.getCollateralTokenPriceFeed(weth)
-        );
+        assertEq(sfcEngine.getSPriceFeed(weth), sfcEngine.getCollateralTokenPriceFeed(weth));
     }
 
     function testGetCollateralTokens() public view {

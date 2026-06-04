@@ -43,18 +43,14 @@ contract ContinueOnRevertInvariants is StdInvariant, Test {
     function setUp() external {
         DeploySFC deployer = new DeploySFC();
         (sfc, sfcEngine, helperConfig) = deployer.run();
-        (ethUsdPriceFeed, btcUsdPriceFeed, weth, wbtc, ) = helperConfig
-            .activeNetworkConfig();
+        (ethUsdPriceFeed, btcUsdPriceFeed, weth, wbtc,) = helperConfig.activeNetworkConfig();
         handler = new ContinueOnRevertHandler(sfcEngine, sfc);
         targetContract(address(handler));
         // targetContract(address(ethUsdPriceFeed));// Why can't we just do this?
     }
 
     // forge-config: default.invariant.fail-on-revert = false
-    function invariant_protocolMustHaveMoreValueThanTotalSupplyDollars()
-        public
-        view
-    {
+    function invariant_protocolMustHaveMoreValueThanTotalSupplyDollars() public view {
         uint256 totalSupply = sfc.totalSupply();
         uint256 wethDeposited = ERC20Mock(weth).balanceOf(address(sfcEngine));
         uint256 wbtcDeposited = ERC20Mock(wbtc).balanceOf(address(sfcEngine));

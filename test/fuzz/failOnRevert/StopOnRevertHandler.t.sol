@@ -33,12 +33,8 @@ contract StopOnRevertHandler is Test {
         weth = ERC20Mock(collateralTokens[0]);
         wbtc = ERC20Mock(collateralTokens[1]);
 
-        ethUsdPriceFeed = MockV3Aggregator(
-            sfcEngine.getCollateralTokenPriceFeed(address(weth))
-        );
-        btcUsdPriceFeed = MockV3Aggregator(
-            sfcEngine.getCollateralTokenPriceFeed(address(wbtc))
-        );
+        ethUsdPriceFeed = MockV3Aggregator(sfcEngine.getCollateralTokenPriceFeed(address(weth)));
+        btcUsdPriceFeed = MockV3Aggregator(sfcEngine.getCollateralTokenPriceFeed(address(wbtc)));
     }
 
     // FUNCTOINS TO INTERACT WITH
@@ -46,10 +42,7 @@ contract StopOnRevertHandler is Test {
     ///////////////
     // SFCEngine //
     ///////////////
-    function mintAndDepositCollateral(
-        uint256 collateralSeed,
-        uint256 amountCollateral
-    ) public {
+    function mintAndDepositCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
         // must be more than 0
         amountCollateral = bound(amountCollateral, 1, MAX_DEPOSIT_SIZE);
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
@@ -61,15 +54,9 @@ contract StopOnRevertHandler is Test {
         vm.stopPrank();
     }
 
-    function redeemCollateral(
-        uint256 collateralSeed,
-        uint256 amountCollateral
-    ) public {
+    function redeemCollateral(uint256 collateralSeed, uint256 amountCollateral) public {
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        uint256 maxCollateral = sfcEngine.getCollateralBalanceOfUser(
-            msg.sender,
-            address(collateral)
-        );
+        uint256 maxCollateral = sfcEngine.getCollateralBalanceOfUser(msg.sender, address(collateral));
 
         amountCollateral = bound(amountCollateral, 0, maxCollateral);
         //vm.prank(msg.sender);
@@ -99,25 +86,15 @@ contract StopOnRevertHandler is Test {
     //     sfc.mint(msg.sender, amountSfc);
     // }
 
-    function liquidate(
-        uint256 collateralSeed,
-        address userToBeLiquidated,
-        uint256 debtToCover
-    ) public {
+    function liquidate(uint256 collateralSeed, address userToBeLiquidated, uint256 debtToCover) public {
         uint256 minHealthFactor = sfcEngine.getMinHealthFactor();
-        uint256 userHealthFactor = sfcEngine.getHealthFactor(
-            userToBeLiquidated
-        );
+        uint256 userHealthFactor = sfcEngine.getHealthFactor(userToBeLiquidated);
         if (userHealthFactor >= minHealthFactor) {
             return;
         }
         debtToCover = bound(debtToCover, 1, uint256(type(uint96).max));
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        sfcEngine.liquidate(
-            address(collateral),
-            userToBeLiquidated,
-            debtToCover
-        );
+        sfcEngine.liquidate(address(collateral), userToBeLiquidated, debtToCover);
     }
 
     /////////////////////////////
@@ -138,23 +115,16 @@ contract StopOnRevertHandler is Test {
     /////////////////////////////
     // Aggregator //
     /////////////////////////////
-    function updateCollateralPrice(
-        uint96 newPrice,
-        uint256 collateralSeed
-    ) public {
+    function updateCollateralPrice(uint96 newPrice, uint256 collateralSeed) public {
         int256 intNewPrice = int256(uint256(newPrice));
         ERC20Mock collateral = _getCollateralFromSeed(collateralSeed);
-        MockV3Aggregator priceFeed = MockV3Aggregator(
-            sfcEngine.getCollateralTokenPriceFeed(address(collateral))
-        );
+        MockV3Aggregator priceFeed = MockV3Aggregator(sfcEngine.getCollateralTokenPriceFeed(address(collateral)));
 
         priceFeed.updateAnswer(intNewPrice);
     }
 
     /// Helper Functions
-    function _getCollateralFromSeed(
-        uint256 collateralSeed
-    ) private view returns (ERC20Mock) {
+    function _getCollateralFromSeed(uint256 collateralSeed) private view returns (ERC20Mock) {
         if (collateralSeed % 2 == 0) {
             return weth;
         } else {

@@ -1,27 +1,31 @@
-import type { PublicClient } from 'viem';
-import { ADDRESSES } from './contracts';
+import type { PublicClient } from "viem";
+import { ADDRESSES } from "./contracts";
 
+export const DEPLOY_BLOCK = 8_200_000n;
 const CHUNK_SIZE = 9000n; // stay under 10k limit
 
 const COLLATERAL_DEPOSITED_EVENT = {
-  name: 'CollateralDeposited',
-  type: 'event',
+  name: "CollateralDeposited",
+  type: "event",
   inputs: [
-    { name: 'user', type: 'address', indexed: true },
-    { name: 'token', type: 'address', indexed: true },
-    { name: 'amount', type: 'uint256', indexed: false },
+    { name: "user", type: "address", indexed: true },
+    { name: "token", type: "address", indexed: true },
+    { name: "amount", type: "uint256", indexed: false },
   ],
 } as const;
 
 export async function fetchAllDepositors(
-  publicClient: PublicClient
+  publicClient: PublicClient,
 ): Promise<`0x${string}`[]> {
   const latestBlock = await publicClient.getBlockNumber();
 
   const allUsers = new Set<`0x${string}`>();
 
-  for (let from = 0n; from <= latestBlock; from += CHUNK_SIZE) {
-    const to = from + CHUNK_SIZE - 1n > latestBlock ? latestBlock : from + CHUNK_SIZE - 1n;
+  for (let from = DEPLOY_BLOCK; from <= latestBlock; from += CHUNK_SIZE) {
+    const to =
+      from + CHUNK_SIZE - 1n > latestBlock
+        ? latestBlock
+        : from + CHUNK_SIZE - 1n;
 
     try {
       const logs = await publicClient.getLogs({

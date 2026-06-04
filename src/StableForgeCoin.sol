@@ -36,10 +36,7 @@ contract StableForgeCoin is ERC20Burnable, Ownable {
         super.burn(_amount); // calls the burn function from ERC20Burnable
     }
 
-    function mint(
-        address _to,
-        uint256 _amount
-    ) external onlyOwner returns (bool) {
+    function mint(address _to, uint256 _amount) external onlyOwner returns (bool) {
         if (_to == address(0)) {
             revert StableForgeCoin__NotZeroAddress();
         }
