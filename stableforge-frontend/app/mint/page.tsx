@@ -38,7 +38,7 @@ export default function MintPage() {
     writeContract({
       address: ADDRESSES.SFCEngine,
       abi: SFC_ENGINE_ABI,
-      functionName: 'mintDsc',
+      functionName: 'mintSfc',
       args: [parseUnits(amount, 18)],
     });
   };

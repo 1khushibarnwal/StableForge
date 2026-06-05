@@ -55,7 +55,7 @@ export default function DepositPage() {
       writeContract({
         address: ADDRESSES.SFCEngine,
         abi: SFC_ENGINE_ABI,
-        functionName: 'depositCollateralAndMintDsc',
+        functionName: 'depositCollateralAndMintSfc',
         args: [selectedToken.address, amountBn, parseUnits(mintAmount, 18)],
       });
     } else {

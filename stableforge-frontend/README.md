@@ -223,7 +223,7 @@ Position updated
 
 - Approval: `ERC20.approve(SFCEngine, amount)`
 - Deposit only: `SFCEngine.depositCollateral(token, amount)`
-- Deposit + mint: `SFCEngine.depositCollateralAndMintDsc(token, collateralAmount, mintAmount)`
+- Deposit + mint: `SFCEngine.depositCollateralAndMintSfc(token, collateralAmount, mintAmount)`
 
 The "Max" button fills the amount field with your full wallet balance of the selected token.
 
@@ -247,7 +247,7 @@ Click "Mint SFC" → Sign tx
 SFC appears in your wallet
 ```
 
-**Contract call:** `SFCEngine.mintDsc(amount)`
+**Contract call:** `SFCEngine.mintSfc(amount)`
 
 The "90% max" button fills 90% of your available mintable amount, leaving a health factor buffer.
 
@@ -278,7 +278,7 @@ Debt reduced, health factor improves
 **Contract calls:**
 
 - Approval: `StableForgeCoin.approve(SFCEngine, amount)`
-- Burn: `SFCEngine.burnDsc(amount)`
+- Burn: `SFCEngine.burnSfc(amount)`
 
 The "Max" button fills your full SFC wallet balance.
 
@@ -314,7 +314,7 @@ Collateral returned to wallet
 **Contract calls:**
 
 - Redeem only: `SFCEngine.redeemCollateral(token, amount)`
-- Redeem + burn: `SFCEngine.redeemCollateralForDsc(token, collateralAmount, burnAmount)`
+- Redeem + burn: `SFCEngine.redeemCollateralForSfc(token, collateralAmount, burnAmount)`
 
 The "Max" button fills your full deposited balance of the selected token.
 

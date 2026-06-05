@@ -2,6 +2,7 @@
 
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { sepolia } from "wagmi/chains";
+
 import "dotenv/config";
 
 export const wagmiConfig = getDefaultConfig({

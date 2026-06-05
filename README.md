@@ -94,8 +94,8 @@ graph TB
         WBTC[WBTC<br/>0x8f3C...A063]
     end
 
-    U -->|depositCollateral / mintDsc| E
-    U -->|burnDsc / redeemCollateral| E
+    U -->|depositCollateral / mintSfc| E
+    U -->|burnSfc / redeemCollateral| E
     LQ -->|liquidate| E
     E -->|mint / burn| S
     E -->|validates price via| OL
@@ -152,9 +152,9 @@ graph TB
 | ---------------------- | ------------------------------------------------- | -------------------------------------------- |
 | `sPriceFeeds`          | `mapping(address => address)`                     | Maps collateral token → Chainlink price feed |
 | `sCollateralDeposited` | `mapping(address => mapping(address => uint256))` | User → Token → Amount deposited              |
-| `sDscMinted`           | `mapping(address => uint256)`                     | User → SFC minted (outstanding debt)         |
+| `sSfcMinted`           | `mapping(address => uint256)`                     | User → SFC minted (outstanding debt)         |
 | `sCollateralTokens`    | `address[]`                                       | List of accepted collateral tokens           |
-| `I_DSC`                | `DecentralizedStableCoin`                         | Immutable reference to SFC token             |
+| `I_SFC`                | `StableForgeCoin`                                 | Immutable reference to SFC token             |
 
 ### Core Functions
 
@@ -163,19 +163,19 @@ graph TB
 **`depositCollateral(address token, uint256 amount)`**  
 Deposits ERC-20 collateral into the engine. Emits `CollateralDeposited`.
 
-**`mintDsc(uint256 amount)`**  
+**`mintSfc(uint256 amount)`**  
 Mints SFC against deposited collateral. Reverts if health factor would fall below 1.0.
 
-**`depositCollateralAndMintDsc(address token, uint256 collateralAmount, uint256 mintAmount)`**  
+**`depositCollateralAndMintSfc(address token, uint256 collateralAmount, uint256 mintAmount)`**  
 Combines deposit + mint in a single transaction.
 
-**`burnDsc(uint256 amount)`**  
+**`burnSfc(uint256 amount)`**  
 Burns SFC from the caller's wallet, reducing their debt.
 
 **`redeemCollateral(address token, uint256 amount)`**  
 Withdraws collateral. Reverts if health factor would break after withdrawal.
 
-**`redeemCollateralForDsc(address token, uint256 collateralAmount, uint256 burnAmount)`**  
+**`redeemCollateralForSfc(address token, uint256 collateralAmount, uint256 burnAmount)`**  
 Combines burn + redeem in a single transaction.
 
 **`liquidate(address collateral, address user, uint256 debtToCover)`**  
@@ -334,9 +334,9 @@ StableForge uses a custom `OracleLib` library to validate every Chainlink price 
 ### Validation Checks (per price read)
 
 ```solidity
-if (price <= 0)                          revert DSCEngine__OraclePriceInvalid();
-if (answeredInRound < roundId)           revert DSCEngine__OracleRoundIncomplete();
-if (block.timestamp - updatedAt > 3 hours) revert DSCEngine__OraclePriceStale();
+if (price <= 0)                          revert SFCEngine__OraclePriceInvalid();
+if (answeredInRound < roundId)           revert SFCEngine__OracleRoundIncomplete();
+if (block.timestamp - updatedAt > 3 hours) revert SFCEngine__OraclePriceStale();
 ```
 
 | Check                       | Guards Against                     |

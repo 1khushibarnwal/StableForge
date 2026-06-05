@@ -20,7 +20,7 @@ export const SFC_ENGINE_ABI = [
     outputs: [],
   },
   {
-    name: "depositCollateralAndMintDsc",
+    name: "depositCollateralAndMintSfc",
     type: "function",
     stateMutability: "nonpayable",
     inputs: [
@@ -31,14 +31,14 @@ export const SFC_ENGINE_ABI = [
     outputs: [],
   },
   {
-    name: "mintDsc",
+    name: "mintSfc",
     type: "function",
     stateMutability: "nonpayable",
     inputs: [{ name: "amountDscToMint", type: "uint256" }],
     outputs: [],
   },
   {
-    name: "burnDsc",
+    name: "burnSfc",
     type: "function",
     stateMutability: "nonpayable",
     inputs: [{ name: "amount", type: "uint256" }],
@@ -55,7 +55,7 @@ export const SFC_ENGINE_ABI = [
     outputs: [],
   },
   {
-    name: "redeemCollateralForDsc",
+    name: "redeemCollateralForSfc",
     type: "function",
     stateMutability: "nonpayable",
     inputs: [

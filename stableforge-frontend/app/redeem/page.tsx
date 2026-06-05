@@ -54,7 +54,7 @@ export default function RedeemPage() {
     if (combinedMode && burnAmount) {
       writeContract({
         address: ADDRESSES.SFCEngine, abi: SFC_ENGINE_ABI,
-        functionName: 'redeemCollateralForDsc',
+        functionName: 'redeemCollateralForSfc',
         args: [selectedToken.address, colAmountBn, burnAmountBn],
       });
     } else {

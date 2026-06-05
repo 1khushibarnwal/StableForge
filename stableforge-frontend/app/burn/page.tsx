@@ -42,7 +42,7 @@ export default function BurnPage() {
 
   const handleBurn = () => {
     if (!amount) return;
-    writeContract({ address: ADDRESSES.SFCEngine, abi: SFC_ENGINE_ABI, functionName: 'burnDsc', args: [amountBn] });
+    writeContract({ address: ADDRESSES.SFCEngine, abi: SFC_ENGINE_ABI, functionName: 'burnSfc', args: [amountBn] });
   };
 
   if (!isConnected) return (
