@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Outer hexagon -->
+  <polygon points="50,4 91,27.5 91,72.5 50,96 9,72.5 9,27.5"
+           fill="#1a1510" stroke="#c9a84c" stroke-width="2.5"/>
+  <!-- Inner hex ring -->
+  <polygon points="50,13 82,31 82,69 50,87 18,69 18,31"
+           fill="none" stroke="#c9a84c" stroke-width="0.7" opacity="0.35"/>
+
+  <!-- Spark lines at top vertex -->
+  <line x1="50" y1="4" x2="42" y2="-5"  stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" opacity="0.75"/>
+  <line x1="50" y1="4" x2="50" y2="-7"  stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" opacity="0.95"/>
+  <line x1="50" y1="4" x2="58" y2="-5"  stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" opacity="0.75"/>
+  <circle cx="50" cy="-9"  r="2.2" fill="#e8c96e"/>
+  <circle cx="41" cy="-7"  r="1.4" fill="#c9a84c" opacity="0.8"/>
+  <circle cx="59" cy="-7"  r="1.4" fill="#c9a84c" opacity="0.8"/>
+
+  <!-- S glyph -->
+  <path d="M22,34 C22,28 27,25 34,25 L40,25 C47,25 51,28 51,34 C51,40 22,43 22,49 C22,55 27,58 36,58 L42,58 C49,58 51,53 51,53"
+        fill="none" stroke="#c9a84c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- F glyph -->
+  <path d="M58,25 L78,25" fill="none" stroke="#c9a84c" stroke-width="5" stroke-linecap="round"/>
+  <line x1="58" y1="25" x2="58" y2="58" stroke="#c9a84c" stroke-width="5" stroke-linecap="round"/>
+  <line x1="58" y1="41" x2="75" y2="41" stroke="#c9a84c" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Base bar -->
+  <rect x="22" y="66" width="56" height="3.5" rx="1.75" fill="#c9a84c" opacity="0.45"/>
+</svg>

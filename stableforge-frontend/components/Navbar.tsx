@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useTheme } from "./ThemeProvider";
-import { Sun, Moon, Anvil } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -61,19 +61,11 @@ export function Navbar() {
             flexShrink: 0,
           }}
         >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              background: "var(--accent)",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Anvil size={16} color="var(--bg-primary)" strokeWidth={2.5} />
-          </div>
+          <img
+            src="/favicon.svg"
+            alt="StableForge logo"
+            style={{ width: 32, height: 32 }}
+          />
           <span
             style={{
               fontFamily: "var(--font-display)",

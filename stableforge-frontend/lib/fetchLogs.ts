@@ -1,47 +1,46 @@
-import type { PublicClient } from "viem";
+import { createPublicClient, http, parseAbiItem } from "viem";
+import { sepolia } from "viem/chains";
+
 import "dotenv/config";
 
-import { ADDRESSES } from "./contracts";
+export const DEPLOY_BLOCK = BigInt(process.env.DEPLOY_BLOCK || "10983674");
 
-export const DEPLOY_BLOCK = BigInt(process.env.DEPLOY_BLOCK ?? "8200000");
+const client = createPublicClient({
+  chain: sepolia,
+  transport: http(),
+});
 
-const CHUNK_SIZE = 9_000n; // under the 10k RPC limit
-const MAX_PARALLEL = 5; // concurrent requests at a time
+const CHUNK_SIZE = 9_000n;
+const PARALLEL_CHUNKS = 5;
 
-const COLLATERAL_DEPOSITED_EVENT = {
-  name: "CollateralDeposited",
-  type: "event",
-  inputs: [
-    { name: "user", type: "address", indexed: true },
-    { name: "token", type: "address", indexed: true },
-    { name: "amount", type: "uint256", indexed: false },
-  ],
-} as const;
+const COLLATERAL_DEPOSITED_EVENT = parseAbiItem(
+  "event CollateralDeposited(address indexed user, address indexed token, uint256 amount)",
+);
 
 export async function fetchAllDepositors(
-  publicClient: PublicClient,
+  contractAddress: `0x${string}`,
 ): Promise<`0x${string}`[]> {
-  const latestBlock = await publicClient.getBlockNumber();
+  const latestBlock = await client.getBlockNumber();
 
-  // Build all chunk ranges from deploy block to now
-  const ranges: Array<{ from: bigint; to: bigint }> = [];
+  const chunks: { from: bigint; to: bigint }[] = [];
   for (let from = DEPLOY_BLOCK; from <= latestBlock; from += CHUNK_SIZE) {
-    const to =
-      from + CHUNK_SIZE - 1n > latestBlock
-        ? latestBlock
-        : from + CHUNK_SIZE - 1n;
-    ranges.push({ from, to });
+    chunks.push({
+      from,
+      to:
+        from + CHUNK_SIZE - 1n < latestBlock
+          ? from + CHUNK_SIZE - 1n
+          : latestBlock,
+    });
   }
 
-  const allUsers = new Set<`0x${string}`>();
+  const users = new Set<`0x${string}`>();
 
-  // Process in parallel batches of MAX_PARALLEL
-  for (let i = 0; i < ranges.length; i += MAX_PARALLEL) {
-    const batch = ranges.slice(i, i + MAX_PARALLEL);
+  for (let i = 0; i < chunks.length; i += PARALLEL_CHUNKS) {
+    const batch = chunks.slice(i, i + PARALLEL_CHUNKS);
     const results = await Promise.allSettled(
       batch.map(({ from, to }) =>
-        publicClient.getLogs({
-          address: ADDRESSES.SFCEngine,
+        client.getLogs({
+          address: contractAddress,
           event: COLLATERAL_DEPOSITED_EVENT,
           fromBlock: from,
           toBlock: to,
@@ -52,11 +51,11 @@ export async function fetchAllDepositors(
     for (const result of results) {
       if (result.status === "fulfilled") {
         for (const log of result.value) {
-          if (log.args.user) allUsers.add(log.args.user as `0x${string}`);
+          if (log.args.user) users.add(log.args.user);
         }
       }
     }
   }
 
-  return [...allUsers];
+  return Array.from(users);
 }
